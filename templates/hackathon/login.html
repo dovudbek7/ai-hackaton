@@ -1,0 +1,148 @@
+{% extends 'hackathon/base.html' %}
+{% load static %}
+
+{% block title %}Kirish - AI Hackaton{% endblock %}
+
+{% block content %}
+<div class="relative flex min-h-screen w-full flex-col overflow-x-hidden gradient-bg">
+    <div class="layout-container flex h-full grow flex-col">
+        <!-- Navigation -->
+        <header
+            class="flex items-center justify-between whitespace-nowrap border-b border-solid border-slate-200 dark:border-[#232948] px-6 md:px-10 py-4 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-md sticky top-0 z-50">
+            <div class="flex items-center gap-3 text-primary dark:text-white">
+                <div class="size-6">
+                    <svg fill="none" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+                        <path
+                            d="M42.4379 44C42.4379 44 36.0744 33.9038 41.1692 24C46.8624 12.9336 42.2078 4 42.2078 4L7.01134 4C7.01134 4 11.6577 12.932 5.96912 23.9969C0.876273 33.9029 7.27094 44 7.27094 44L42.4379 44Z"
+                            fill="currentColor"></path>
+                    </svg>
+                </div>
+                <h2 class="text-lg font-bold leading-tight tracking-tight">AI HACKATON</h2>
+            </div>
+            <div class="flex flex-1 justify-end gap-8 items-center">
+                <nav class="hidden md:flex items-center gap-8">
+                    <a class="text-sm font-medium hover:text-primary transition-colors" href="{% url 'landing' %}">Bosh
+                        sahifa</a>
+                    <a class="text-sm font-medium hover:text-primary transition-colors"
+                        href="{% url 'register' %}">Ro'yxatdan o'tish</a>
+                </nav>
+            </div>
+        </header>
+
+        <!-- Main Content Area -->
+        <main class="flex-1 flex items-center justify-center px-4 py-12">
+            <div class="w-full max-w-[520px] flex flex-col gap-8">
+                <!-- Login Card -->
+                <div
+                    class="bg-white dark:bg-[#191e33] border border-slate-200 dark:border-[#323b67] rounded-xl p-8 shadow-2xl shadow-black/10 dark:shadow-black/40 animate-fade-in">
+                    <div class="text-center mb-8">
+                        <h1 class="text-slate-900 dark:text-white text-3xl font-bold tracking-tight mb-2">Kirish</h1>
+                        <p class="text-slate-500 dark:text-[#929bc9] text-sm">Profilingizga kirish uchun telefon
+                            raqamingizni kiriting</p>
+                    </div>
+
+                    {% if error_message %}
+                    <div class="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-lg">
+                        <p class="text-red-500 text-sm flex items-center gap-2">
+                            <span class="material-symbols-outlined text-sm">error</span>
+                            {{ error_message }}
+                        </p>
+                    </div>
+                    {% endif %}
+
+                    <form class="flex flex-col gap-6" method="POST" action="{% url 'login' %}">
+                        {% csrf_token %}
+
+                        <!-- Phone Number Input with Auto-formatting -->
+                        <div class="flex flex-col gap-2">
+                            <label class="text-slate-700 dark:text-white text-sm font-semibold px-1">Telefon
+                                raqam</label>
+                            <div class="relative">
+                                <span
+                                    class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-[#929bc9] text-[20px]">smartphone</span>
+                                <input id="phone-input-login" name="phone" required value="{{ phone|default:'' }}"
+                                    class="w-full rounded-lg border border-slate-200 dark:border-[#323b67] bg-slate-50 dark:bg-[#101322] py-4 pl-12 pr-4 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all placeholder:text-slate-400 dark:placeholder:text-[#929bc9] input-animated"
+                                    placeholder="+998 XX-XXX-XX-XX" type="text" />
+                            </div>
+                        </div>
+
+                        <!-- Action Button -->
+                        <div class="pt-4 flex flex-col gap-4">
+                            <button type="submit"
+                                class="bg-primary hover:bg-primary-dark w-full h-14 rounded-lg text-white font-bold text-base tracking-wide flex items-center justify-center gap-2 hover:brightness-110 active:scale-[0.98] transition-all shadow-xl shadow-primary/30 btn-primary btn-animated">
+                                Kirish kodini yuborish
+                                <span class="material-symbols-outlined text-[20px]">arrow_forward</span>
+                            </button>
+
+                            <div class="text-center">
+                                <p class="text-slate-500 dark:text-[#929bc9] text-sm">
+                                    Ro'yxatdan o'tmaganmisiz?
+                                    <a href="{% url 'register' %}"
+                                        class="text-primary hover:underline font-semibold">Ro'yxatdan o'tish</a>
+                                </p>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<script>
+    // Phone formatting for login page
+    document.addEventListener('DOMContentLoaded', () => {
+        const phoneInput = document.getElementById('phone-input-login');
+        if (phoneInput) {
+            // Initialize with +998 if empty
+            if (!phoneInput.value || phoneInput.value === '') {
+                phoneInput.value = '+998 ';
+            }
+
+            phoneInput.addEventListener('input', function (e) {
+                let value = e.target.value;
+
+                // Remove all non-digits except +
+                value = value.replace(/[^\d+]/g, '');
+
+                // Ensure it starts with +998
+                if (!value.startsWith('+998')) {
+                    value = '+998';
+                }
+
+                // Get the digits after +998
+                let digits = value.slice(4);
+
+                // Limit to 9 digits
+                digits = digits.slice(0, 9);
+
+                // Format: +998 XX-XXX-XX-XX
+                let formatted = '+998';
+                if (digits.length > 0) {
+                    formatted += ' ' + digits.slice(0, 2);
+                }
+                if (digits.length > 2) {
+                    formatted += '-' + digits.slice(2, 5);
+                }
+                if (digits.length > 5) {
+                    formatted += '-' + digits.slice(5, 7);
+                }
+                if (digits.length > 7) {
+                    formatted += '-' + digits.slice(7, 9);
+                }
+
+                e.target.value = formatted;
+            });
+
+            // Prevent deleting +998
+            phoneInput.addEventListener('keydown', function (e) {
+                if (e.key === 'Backspace' || e.key === 'Delete') {
+                    if (this.selectionStart <= 5) {
+                        e.preventDefault();
+                    }
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

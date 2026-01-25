@@ -1,0 +1,124 @@
+{% extends 'hackathon/base.html' %}
+{% load static %}
+
+{% block title %}Tasdiqlash - AI Hackaton{% endblock %}
+
+{% block content %}
+<div class="relative flex min-h-screen w-full flex-col overflow-x-hidden gradient-bg">
+    <div class="layout-container flex h-full grow flex-col">
+        <!-- Navigation -->
+        <header
+            class="flex items-center justify-between whitespace-nowrap border-b border-solid border-slate-200 dark:border-[#232948] px-6 md:px-10 py-4 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-md sticky top-0 z-50">
+            <div class="flex items-center gap-3 text-primary dark:text-white">
+                <div class="size-6">
+                    <svg fill="none" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+                        <path
+                            d="M42.4379 44C42.4379 44 36.0744 33.9038 41.1692 24C46.8624 12.9336 42.2078 4 42.2078 4L7.01134 4C7.01134 4 11.6577 12.932 5.96912 23.9969C0.876273 33.9029 7.27094 44 7.27094 44L42.4379 44Z"
+                            fill="currentColor"></path>
+                    </svg>
+                </div>
+                <h2 class="text-xl font-bold tracking-tight text-white"><a href="{% url 'landing' %}">AI HACKATON</a>
+                </h2>
+            </div>
+        </header>
+
+        <!-- Main Content Area -->
+        <main class="flex-1 flex items-center justify-center px-4 py-12">
+            <div class="w-full max-w-[520px] flex flex-col gap-8">
+                <!-- OTP Verification Card -->
+                <div
+                    class="bg-white dark:bg-[#191e33] border border-slate-200 dark:border-[#323b67] rounded-xl p-8 shadow-2xl shadow-black/10 dark:shadow-black/40 animate-fade-in">
+                    <div class="text-center mb-8">
+                        <div class="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <span class="material-symbols-outlined text-primary text-[32px]">lock</span>
+                        </div>
+                        <h1 class="text-slate-900 dark:text-white text-3xl font-bold tracking-tight mb-2">Tasdiqlash
+                            kodi</h1>
+                        <p class="text-slate-500 dark:text-[#929bc9] text-sm">Telefon raqamingizga yuborilgan 6 raqamli
+                            kodni kiriting</p>
+                    </div>
+
+                    {% if error_message %}
+                    <div class="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-lg">
+                        <p class="text-red-500 text-sm flex items-center gap-2">
+                            <span class="material-symbols-outlined text-sm">error</span>
+                            {{ error_message }}
+                        </p>
+                    </div>
+                    {% endif %}
+
+                    <!-- Test Mode Notice -->
+                    <div class="mb-6 p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+                        <p class="text-blue-600 dark:text-blue-400 text-sm flex items-center gap-2">
+                            <span class="material-symbols-outlined text-sm">info</span>
+                            <span><strong>Test rejimi:</strong> Tasdiqlash kodi: <code
+                                    class="bg-blue-500/20 px-2 py-1 rounded font-mono">111111</code></span>
+                        </p>
+                    </div>
+
+                    <form class="flex flex-col gap-6" method="POST" action="{% url 'login_otp' %}">
+                        {% csrf_token %}
+
+                        <!-- OTP Input -->
+                        <div class="flex flex-col gap-2">
+                            <label class="text-slate-700 dark:text-white text-sm font-semibold px-1">Tasdiqlash
+                                kodi</label>
+                            <div class="relative">
+                                <span
+                                    class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-[#929bc9] text-[20px]">pin</span>
+                                <input id="otp-input" name="otp" required maxlength="6" pattern="[0-9]{6}"
+                                    class="w-full rounded-lg border border-slate-200 dark:border-[#323b67] bg-slate-50 dark:bg-[#101322] py-4 pl-12 pr-4 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all placeholder:text-slate-400 dark:placeholder:text-[#929bc9] text-center text-2xl tracking-[0.5em] font-mono input-animated"
+                                    placeholder="000000" type="text" inputmode="numeric" autocomplete="one-time-code" />
+                            </div>
+                            <p class="text-slate-500 dark:text-[#929bc9] text-xs px-1 mt-1">
+                                Kod 3 daqiqa davomida amal qiladi
+                            </p>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="pt-4 flex flex-col gap-4">
+                            <button type="submit"
+                                class="bg-primary hover:bg-primary-dark w-full h-14 rounded-lg text-white font-bold text-base tracking-wide flex items-center justify-center gap-2 hover:brightness-110 active:scale-[0.98] transition-all shadow-xl shadow-primary/30 btn-primary btn-animated">
+                                Tasdiqlash
+                                <span class="material-symbols-outlined text-[20px]">check_circle</span>
+                            </button>
+
+                            <div class="text-center">
+                                <a href="{% url 'login' %}"
+                                    class="text-slate-500 dark:text-[#929bc9] hover:text-primary text-sm inline-flex items-center gap-1">
+                                    <span class="material-symbols-outlined text-[16px]">arrow_back</span>
+                                    Orqaga qaytish
+                                </a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<script>
+    // OTP input formatting
+    document.addEventListener('DOMContentLoaded', () => {
+        const otpInput = document.getElementById('otp-input');
+        if (otpInput) {
+            // Auto-focus on load
+            otpInput.focus();
+
+            // Only allow numbers
+            otpInput.addEventListener('input', function (e) {
+                this.value = this.value.replace(/[^0-9]/g, '');
+            });
+
+            // Auto-submit when 6 digits entered (optional)
+            otpInput.addEventListener('input', function (e) {
+                if (this.value.length === 6) {
+                    // Optional: auto-submit form
+                    // this.form.submit();
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Registration Step 1 - TechHack 2024</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#1337ec",
+                        "background-light": "#f6f6f8",
+                        "background-dark": "#101322",
+                    },
+                    fontFamily: {
+                        "display": ["Space Grotesk", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            font-family: "Space Grotesk", sans-serif;
+        }
+        .gradient-bg {
+            background: radial-gradient(circle at top right, rgba(19, 55, 236, 0.15), transparent),
+                        radial-gradient(circle at bottom left, rgba(19, 55, 236, 0.05), transparent);
+        }
+        .btn-gradient {
+            background: linear-gradient(135deg, #1337ec 0%, #6366f1 100%);
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark min-h-screen text-slate-900 dark:text-white selection:bg-primary/30">
+<div class="relative flex min-h-screen w-full flex-col overflow-x-hidden gradient-bg">
+<div class="layout-container flex h-full grow flex-col">
+<!-- Navigation -->
+<header class="flex items-center justify-between whitespace-nowrap border-b border-solid border-slate-200 dark:border-[#232948] px-6 md:px-10 py-4 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-md sticky top-0 z-50">
+<div class="flex items-center gap-3 text-primary dark:text-white">
+<div class="size-6">
+<svg fill="none" viewbox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+<path d="M42.4379 44C42.4379 44 36.0744 33.9038 41.1692 24C46.8624 12.9336 42.2078 4 42.2078 4L7.01134 4C7.01134 4 11.6577 12.932 5.96912 23.9969C0.876273 33.9029 7.27094 44 7.27094 44L42.4379 44Z" fill="currentColor"></path>
+</svg>
+</div>
+<h2 class="text-lg font-bold leading-tight tracking-tight">TechHack 2024</h2>
+</div>
+<div class="flex flex-1 justify-end gap-8 items-center">
+<nav class="hidden md:flex items-center gap-8">
+<a class="text-sm font-medium hover:text-primary transition-colors" href="#">Home</a>
+<a class="text-sm font-medium hover:text-primary transition-colors" href="#">Schedule</a>
+<a class="text-sm font-medium hover:text-primary transition-colors" href="#">FAQ</a>
+</nav>
+<button class="flex min-w-[84px] cursor-pointer items-center justify-center rounded-lg h-10 px-5 bg-primary text-white text-sm font-bold transition-all hover:opacity-90 active:scale-95 shadow-lg shadow-primary/20">
+                        Login
+                    </button>
+</div>
+</header>
+<!-- Main Content Area -->
+<main class="flex-1 flex items-center justify-center px-4 py-12">
+<div class="w-full max-w-[520px] flex flex-col gap-8">
+<!-- Progress Section -->
+<div class="flex flex-col gap-3 px-2">
+<div class="flex gap-6 justify-between items-end">
+<p class="text-slate-900 dark:text-white text-base font-bold">Registration Progress</p>
+<p class="text-primary font-bold text-sm">25% Complete</p>
+</div>
+<div class="h-2 rounded-full bg-slate-200 dark:bg-[#323b67] overflow-hidden">
+<div class="h-full rounded-full bg-primary" style="width: 25%;"></div>
+</div>
+<p class="text-slate-500 dark:text-[#929bc9] text-xs font-medium uppercase tracking-wider">Step 1 of 4: Identity &amp; Phone</p>
+</div>
+<!-- Registration Card -->
+<div class="bg-white dark:bg-[#191e33] border border-slate-200 dark:border-[#323b67] rounded-xl p-8 shadow-2xl shadow-black/10 dark:shadow-black/40">
+<div class="text-center mb-8">
+<h1 class="text-slate-900 dark:text-white text-3xl font-bold tracking-tight mb-2">Join the Hackathon</h1>
+<p class="text-slate-500 dark:text-[#929bc9] text-sm">Verify your details to secure your spot in TechHack 2024</p>
+</div>
+<form class="flex flex-col gap-6" onsubmit="return false;">
+<!-- Full Name Input -->
+<div class="flex flex-col gap-2">
+<label class="text-slate-700 dark:text-white text-sm font-semibold px-1">Full Name</label>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-[#929bc9] text-[20px]">person</span>
+<input class="w-full rounded-lg border border-slate-200 dark:border-[#323b67] bg-slate-50 dark:bg-[#101322] py-4 pl-12 pr-4 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all placeholder:text-slate-400 dark:placeholder:text-[#929bc9]" placeholder="John Doe" type="text"/>
+</div>
+</div>
+<!-- Phone Number Input -->
+<div class="flex flex-col gap-2">
+<label class="text-slate-700 dark:text-white text-sm font-semibold px-1">Phone Number</label>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-[#929bc9] text-[20px]">smartphone</span>
+<input class="w-full rounded-lg border border-slate-200 dark:border-[#323b67] bg-slate-50 dark:bg-[#101322] py-4 pl-12 pr-4 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all placeholder:text-slate-400 dark:placeholder:text-[#929bc9]" placeholder="+1 (555) 000-0000" type="tel"/>
+</div>
+<div class="flex items-start gap-2 mt-1 px-1">
+<span class="material-symbols-outlined text-primary text-[16px] mt-0.5">verified_user</span>
+<p class="text-slate-500 dark:text-[#929bc9] text-xs leading-relaxed">
+                                        We'll send a 6-digit code to verify your device. Standard text messaging rates may apply.
+                                    </p>
+</div>
+</div>
+<!-- Action Button -->
+<div class="pt-4 flex flex-col gap-4">
+<button class="btn-gradient w-full h-14 rounded-lg text-white font-bold text-base tracking-wide flex items-center justify-center gap-2 hover:brightness-110 active:scale-[0.98] transition-all shadow-xl shadow-primary/30">
+                                    Send Verification Code
+                                    <span class="material-symbols-outlined text-[20px]">arrow_forward</span>
+</button>
+<div class="flex items-center justify-center gap-2 text-slate-400 dark:text-[#929bc9]">
+<span class="material-symbols-outlined text-[14px]">lock</span>
+<span class="text-[11px] font-medium uppercase tracking-widest">Your data is encrypted and secure</span>
+</div>
+</div>
+</form>
+</div>
+<!-- Bottom Footer Hint -->
+<div class="text-center">
+<p class="text-slate-500 dark:text-[#929bc9] text-sm">
+                            Already have an account? 
+                            <a class="text-primary font-bold hover:underline" href="#">Log in instead</a>
+</p>
+</div>
+</div>
+</main>
+<!-- Background Decoration -->
+<div class="fixed top-1/2 left-0 -translate-y-1/2 -translate-x-1/2 w-[500px] h-[500px] bg-primary/10 rounded-full blur-[120px] pointer-events-none -z-10"></div>
+<div class="fixed bottom-0 right-0 translate-y-1/2 translate-x-1/2 w-[400px] h-[400px] bg-indigo-500/10 rounded-full blur-[100px] pointer-events-none -z-10"></div>
+</div>
+</div>
+</body></html>

@@ -1,0 +1,190 @@
+{% extends 'hackathon/base.html' %}
+{% load static %}
+
+{% block content %}
+<!-- TopNavBar -->
+<header class="fixed top-0 w-full z-50 glass-nav">
+    <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+            <div class="size-8 bg-primary rounded flex items-center justify-center shadow-glow">
+                <svg class="text-white w-5 h-5" fill="none" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+                    <path
+                        d="M36.7273 44C33.9891 44 31.6043 39.8386 30.3636 33.69C29.123 39.8386 26.7382 44 24 44C21.2618 44 18.877 39.8386 17.6364 33.69C16.3957 39.8386 14.0109 44 11.2727 44C7.25611 44 4 35.0457 4 24C4 12.9543 7.25611 4 11.2727 4C14.0109 4 16.3957 8.16144 17.6364 14.31C18.877 8.16144 21.2618 4 24 4C26.7382 4 29.123 8.16144 30.3636 14.31C31.6043 8.16144 33.9891 4 36.7273 4C40.7439 4 44 12.9543 44 24C44 35.0457 40.7439 44 36.7273 44Z"
+                        fill="currentColor"></path>
+                </svg>
+            </div>
+            <h2 class="text-xl font-bold tracking-tight text-white"><a href="{% url 'landing' %}">AI HACKATON</a></h2>
+        </div>
+        <nav class="hidden md:flex items-center gap-10">
+            <a class="text-sm font-medium text-slate-300 hover:text-primary transition-colors" href="#about">Hackaton
+                haqida</a>
+            <a class="text-sm font-medium text-slate-300 hover:text-primary transition-colors"
+                href="#requirements">Talablar</a>
+            <a class="text-sm font-medium text-slate-300 hover:text-primary transition-colors"
+                href="#timeline">Bosqichlar</a>
+            <a href="{% url 'register' %}"
+                class="bg-primary hover:bg-primary-dark text-white px-6 py-2.5 rounded-lg text-sm font-bold transition-all transform hover:scale-105 shadow-lg hover:shadow-primary/40">
+                Ro‘yxatdan o‘tish
+            </a>
+        </nav>
+    </div>
+</header>
+
+<main class="pt-20">
+    <!-- HeroSection -->
+    <section
+        class="relative min-h-[85vh] flex items-center justify-center px-6 hero-gradient overflow-hidden animated-bg-gradient">
+        <div class="absolute inset-0 opacity-10"
+            style="background-image: radial-gradient(#2563eb 1px, transparent 1px); background-size: 40px 40px;"></div>
+
+        <div class="max-w-5xl text-center z-10 animate-fade-in">
+            <div
+                class="inline-flex items-center gap-2 bg-primary/10 border border-primary/20 text-primary-400 px-4 py-1.5 rounded-full text-sm font-medium mb-8 backdrop-blur-sm">
+                <span class="relative flex h-2 w-2">
+                    <span
+                        class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                    <span class="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+                </span>
+                2024 yilgi qabul boshlandi
+            </div>
+
+            <h1 class="text-5xl md:text-8xl font-black mb-6 tracking-tighter leading-none text-white hero-title">
+                AI HACKATON
+            </h1>
+
+            <p class="text-lg md:text-xl text-slate-400 max-w-2xl mx-auto mb-10 font-light leading-relaxed hero-desc">
+                Sun’iy intellekt va dasturlash bo‘yicha tanlov. Kelajakni biz bilan birga quring.
+            </p>
+
+            <div class="flex flex-col sm:flex-row items-center justify-center gap-4 hero-btn">
+                <a href="{% url 'register' %}"
+                    class="w-full sm:w-auto px-10 py-4 bg-primary text-white font-bold rounded-xl text-lg hover:bg-primary-dark hover:shadow-glow transition-all">
+                    Ro‘yxatdan o‘tish
+                </a>
+                <a href="{% url 'login' %}"
+                    class="w-full sm:w-auto px-10 py-4 bg-white/5 border border-white/10 text-white font-bold rounded-xl text-lg hover:bg-white/10 transition-all">
+                    Login
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- FeatureSection (About) -->
+    <section class="py-24 px-6 bg-background-light dark:bg-[#0f172a] reveal-on-scroll" id="about">
+        <div class="max-w-7xl mx-auto">
+            <div class="flex flex-col md:flex-row gap-16 items-start">
+                <div class="flex-1">
+                    <h2 class="text-4xl md:text-5xl font-bold mb-6 tracking-tight text-white">Hackaton haqida</h2>
+                    <p class="text-lg text-slate-400 leading-relaxed mb-8">
+                        AI Hackaton - bu iqtidorli yoshlarni birlashtiruvchi loyiha. Bu yerda siz o‘z g‘oyalaringizni
+                        amalga oshirish va tajriba orttirish imkoniga ega bo‘lasiz.
+                    </p>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                        <div
+                            class="p-6 rounded-xl border border-white/5 bg-white/5 hover:border-primary/50 transition-colors glass-card">
+                            <span class="material-symbols-outlined text-primary text-3xl mb-4">lightbulb</span>
+                            <h3 class="text-xl font-bold mb-2 text-white">Bizning maqsad</h3>
+                            <p class="text-slate-400 text-sm">Dasturchilar hamjamiyatini rivojlantirish va
+                                innovatsiyalarni qo‘llab-quvvatlash.</p>
+                        </div>
+                        <div
+                            class="p-6 rounded-xl border border-white/5 bg-white/5 hover:border-primary/50 transition-colors glass-card">
+                            <span class="material-symbols-outlined text-primary text-3xl mb-4">terminal</span>
+                            <h3 class="text-xl font-bold mb-2 text-white">Texnologiyalar</h3>
+                            <p class="text-slate-400 text-sm">Sun’iy intellekt, LLM va zamonaviy dasturlash yechimlari.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <!-- Image kept same or updated alt text -->
+                <div class="flex-1 w-full">
+                    <div class="relative rounded-2xl overflow-hidden aspect-video group shadow-2xl">
+                        <div
+                            class="absolute inset-0 bg-primary/20 mix-blend-overlay group-hover:opacity-0 transition-opacity">
+                        </div>
+                        <img class="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700"
+                            src="https://lh3.googleusercontent.com/aida-public/AB6AXuA9DTiL7RtZSU6ZcAPDrDKlYAkyhMvv0fPgDlzuLvx0ToPX9y808Y-xXxFz85MbQrG7azYTD763rre0Jg3uxXV4shTROiYUW8GP8KqKgq9J4jTqO1DYVEP7NqOyeBDxToa8TKSVsExwWZrcREgPGf-i5i4wBEVc-GDpVONCkpqaCYRuzklagn5Ojnv3ahKAukzyixQ9Ojf5Zg5lSCiIqZRUPhOyT18qKNsFvSNSNkArPxw51z-UKeX-vCqvajqjOBHyl2knaWX2aiA"
+                            alt="Dasturchilar hamkorligi">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+
+    <!-- Timeline Section -->
+    <section class="py-24 px-6 bg-background-light dark:bg-[#0f172a] reveal-on-scroll" id="timeline">
+        <div class="max-w-3xl mx-auto">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl font-bold mb-4 text-white">Bosqichlar</h2>
+                <p class="text-slate-400">Muhim sanalarni o‘tkazib yubormang.</p>
+            </div>
+            <div class="relative border-l-2 border-primary/20 ml-4 md:ml-0 stagger-container">
+                <!-- Timeline Item 1 -->
+                <div class="mb-12 ml-8 relative reveal-child">
+                    <div
+                        class="absolute -left-[41px] top-0 size-5 bg-primary rounded-full border-4 border-background-dark shadow-glow">
+                    </div>
+                    <span class="text-primary font-bold text-sm uppercase tracking-widest">15 Okt - 01 Noy</span>
+                    <h4 class="text-xl font-bold mt-1 text-white">Ro‘yxatdan o‘tish</h4>
+                    <p class="text-slate-400 mt-2">Arizalarni qabul qilish va saralash bosqichi.</p>
+                </div>
+                <!-- Timeline Item 2 -->
+                <div class="mb-12 ml-8 relative reveal-child">
+                    <div
+                        class="absolute -left-[41px] top-0 size-5 bg-slate-700 rounded-full border-4 border-background-dark">
+                    </div>
+                    <span class="text-slate-500 font-bold text-sm uppercase tracking-widest">10 Noy</span>
+                    <h4 class="text-xl font-bold mt-1 text-white">Ochilish marosimi</h4>
+                    <p class="text-slate-400 mt-2">Tanlov shartlari e’lon qilinadi.</p>
+                </div>
+                <!-- Timeline Item 3 -->
+                <div class="mb-0 ml-8 relative reveal-child">
+                    <div
+                        class="absolute -left-[41px] top-0 size-5 bg-slate-700 rounded-full border-4 border-background-dark">
+                    </div>
+                    <span class="text-slate-500 font-bold text-sm uppercase tracking-widest">12 Noy</span>
+                    <h4 class="text-xl font-bold mt-1 text-white">Taqdirlash</h4>
+                    <p class="text-slate-400 mt-2">G‘oliblarni aniqlash va mukofotlash.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Final CTA -->
+    <section class="py-24 px-6 text-center reveal-on-scroll">
+        <div
+            class="max-w-4xl mx-auto p-12 rounded-3xl bg-gradient-to-br from-primary to-blue-900 relative overflow-hidden shadow-2xl">
+            <div class="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -mr-32 -mt-32 blur-3xl"></div>
+            <div class="relative z-10">
+                <h2 class="text-4xl md:text-5xl font-bold text-white mb-6">Kelajakni qurishga tayyormisiz?</h2>
+                <p class="text-white/80 text-lg mb-10 max-w-xl mx-auto">
+                    Eng qiziqarli AI tanlovida ishtirok eting. Joylar soni cheklangan.
+                </p>
+                <a href="{% url 'register' %}"
+                    class="inline-block bg-white text-primary px-12 py-4 rounded-xl font-bold text-lg hover:bg-slate-100 transition-all shadow-xl hover:-translate-y-1 btn-animated">
+                    Ishtirok etish
+                </a>
+            </div>
+        </div>
+    </section>
+</main>
+
+<!-- Footer -->
+<footer class="py-12 px-6 border-t border-white/5 bg-[#0f172a]">
+    <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-8">
+        <div class="flex items-center gap-3">
+            <div class="size-6 bg-primary rounded flex items-center justify-center">
+                <svg class="text-white w-3 h-3" fill="none" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+                    <path
+                        d="M36.7273 44C33.9891 44 31.6043 39.8386 30.3636 33.69C29.123 39.8386 26.7382 44 24 44C21.2618 44 18.877 39.8386 17.6364 33.69C16.3957 39.8386 14.0109 44 11.2727 44C7.25611 44 4 35.0457 4 24C4 12.9543 7.25611 4 11.2727 4C14.0109 4 16.3957 8.16144 17.6364 14.31C18.877 8.16144 21.2618 4 24 4C26.7382 4 29.123 8.16144 30.3636 14.31C31.6043 8.16144 33.9891 4 36.7273 4C40.7439 4 44 12.9543 44 24C44 35.0457 40.7439 44 36.7273 44Z"
+                        fill="currentColor"></path>
+                </svg>
+            </div>
+            <h2 class="text-lg font-bold text-white">AI HACKATON</h2>
+        </div>
+        <p class="text-sm text-slate-500">© 2026 AI Hackaton. Barcha huquqlar himoyalangan.</p>
+    </div>
+</footer>
+{% endblock %}

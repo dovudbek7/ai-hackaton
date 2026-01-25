@@ -1,0 +1,299 @@
+/* 
+ * Modern AI Hackathon Animations
+ * Theme: Tech, Smooth, Subtle, Professional
+ */
+
+:root {
+    --ease-out-expo: cubic-bezier(0.19, 1, 0.22, 1);
+    --ease-out-back: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    --duration-slow: 0.8s;
+    --duration-normal: 0.5s;
+    --duration-fast: 0.3s;
+    --delay-stagger: 0.1s;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+
+    /* =========================================
+       Global Page Load Animation
+       ========================================= */
+    .animate-page-load {
+        animation: fadeUp var(--duration-normal) var(--ease-out-expo) forwards;
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    @keyframes fadeUp {
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* =========================================
+       Section Reveal (Scroll)
+       ========================================= */
+    .reveal-on-scroll {
+        opacity: 0;
+        transform: translateY(30px);
+        transition: opacity var(--duration-slow) var(--ease-out-expo),
+            transform var(--duration-slow) var(--ease-out-expo);
+        will-change: opacity, transform;
+    }
+
+    .reveal-on-scroll.is-visible {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    /* Staggered children reveal */
+    .stagger-container .reveal-child {
+        opacity: 0;
+        transform: translateY(20px);
+        transition: opacity var(--duration-normal) var(--ease-out-expo),
+            transform var(--duration-normal) var(--ease-out-expo);
+    }
+
+    .stagger-container.is-visible .reveal-child {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    .stagger-container.is-visible .reveal-child:nth-child(1) {
+        transition-delay: 0.1s;
+    }
+
+    .stagger-container.is-visible .reveal-child:nth-child(2) {
+        transition-delay: 0.2s;
+    }
+
+    .stagger-container.is-visible .reveal-child:nth-child(3) {
+        transition-delay: 0.3s;
+    }
+
+    .stagger-container.is-visible .reveal-child:nth-child(4) {
+        transition-delay: 0.4s;
+    }
+
+    /* =========================================
+       Hero Animations
+       ========================================= */
+    .hero-title {
+        opacity: 0;
+        animation: heroFadeUp 0.8s var(--ease-out-expo) 0.2s forwards;
+    }
+
+    .hero-desc {
+        opacity: 0;
+        animation: heroFadeUp 0.8s var(--ease-out-expo) 0.4s forwards;
+    }
+
+    .hero-btn {
+        opacity: 0;
+        animation: heroScaleIn 0.6s var(--ease-out-back) 0.6s forwards;
+    }
+
+    @keyframes heroFadeUp {
+        from {
+            opacity: 0;
+            transform: translateY(40px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @keyframes heroScaleIn {
+        from {
+            opacity: 0;
+            transform: scale(0.9);
+        }
+
+        to {
+            opacity: 1;
+            transform: scale(1);
+        }
+    }
+
+    /* Hero Button Interactions */
+    .hero-btn {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .hero-btn:hover {
+        transform: scale(1.02);
+        box-shadow: 0 0 20px rgba(37, 99, 235, 0.4);
+        /* Primary color glow */
+    }
+
+    .hero-btn:active {
+        transform: scale(0.98);
+    }
+
+    /* =========================================
+       Background Animations
+       ========================================= */
+    .animated-bg-gradient {
+        background-size: 200% 200%;
+        animation: gradientMove 15s ease infinite;
+    }
+
+    @keyframes gradientMove {
+        0% {
+            background-position: 0% 50%;
+        }
+
+        50% {
+            background-position: 100% 50%;
+        }
+
+        100% {
+            background-position: 0% 50%;
+        }
+    }
+
+    /* Floating shapes */
+    .floating-shape {
+        animation: float 10s ease-in-out infinite;
+    }
+
+    .floating-shape-delayed {
+        animation: float 12s ease-in-out infinite 2s;
+    }
+
+    @keyframes float {
+
+        0%,
+        100% {
+            transform: translateY(0) rotate(0deg);
+        }
+
+        50% {
+            transform: translateY(-20px) rotate(2deg);
+        }
+    }
+
+    /* =========================================
+       Form & Input Animations
+       ========================================= */
+    .input-animated {
+        transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+    }
+
+    .input-animated:focus {
+        border-color: #2563eb;
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+        transform: translateY(-1px);
+    }
+
+    /* Validation Shake */
+    .input-error {
+        animation: shake 0.4s cubic-bezier(.36, .07, .19, .97) both;
+        border-color: #ef4444;
+    }
+
+    @keyframes shake {
+
+        10%,
+        90% {
+            transform: translate3d(-1px, 0, 0);
+        }
+
+        20%,
+        80% {
+            transform: translate3d(2px, 0, 0);
+        }
+
+        30%,
+        50%,
+        70% {
+            transform: translate3d(-4px, 0, 0);
+        }
+
+        40%,
+        60% {
+            transform: translate3d(4px, 0, 0);
+        }
+    }
+
+    /* Button Micro-interactions */
+    .btn-animated {
+        transition: transform 0.2s var(--ease-out-back), box-shadow 0.2s ease;
+    }
+
+    .btn-animated:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+    }
+
+    .btn-animated:active {
+        transform: scale(0.97);
+    }
+
+    /* =========================================
+       Profile Page Animations
+       ========================================= */
+    .status-banner-enter {
+        animation: slideDown 0.6s var(--ease-out-expo) forwards;
+        transform-origin: top;
+    }
+
+    @keyframes slideDown {
+        from {
+            opacity: 0;
+            transform: translateY(-20px) scaleY(0.9);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0) scaleY(1);
+        }
+    }
+
+    .profile-card-enter {
+        animation: fadeUpProfile 0.6s var(--ease-out-expo) 0.2s forwards;
+        opacity: 0;
+    }
+
+    @keyframes fadeUpProfile {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Status specific highlights */
+    .status-accepted-glow {
+        animation: successGlow 2s ease-out forwards;
+    }
+
+    @keyframes successGlow {
+        0% {
+            box-shadow: 0 0 0 0 rgba(34, 197, 94, 0);
+        }
+
+        30% {
+            box-shadow: 0 0 20px 0 rgba(34, 197, 94, 0.3);
+            border-color: rgba(34, 197, 94, 0.5);
+        }
+
+        100% {
+            box-shadow: 0 0 0 0 rgba(34, 197, 94, 0);
+        }
+    }
+
+}
+
+/* End prefers-reduced-motion check */
+
+/* Utility class to force minimal opacity for JS reveal logic */
+.js-reveal-hide {
+    opacity: 0;
+}

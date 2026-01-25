@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Hackathon 2024 - Registration Step 3</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#1337ec",
+                        "background-light": "#f6f6f8",
+                        "background-dark": "#101322",
+                    },
+                    fontFamily: {
+                        "display": ["Space Grotesk", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+        }
+        .form-input:focus {
+            border-color: #1337ec;
+            ring-color: #1337ec;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark min-h-screen text-slate-900 dark:text-white font-display">
+<!-- Top Navigation Bar -->
+<header class="flex items-center justify-center border-b border-solid border-[#e5e7eb] dark:border-[#232948] bg-white dark:bg-background-dark px-10 py-3 sticky top-0 z-50">
+<div class="flex w-full max-w-[960px] items-center justify-between">
+<div class="flex items-center gap-4 text-primary dark:text-white">
+<div class="size-6">
+<svg fill="none" viewbox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+<path d="M4 4H17.3334V17.3334H30.6666V30.6666H44V44H4V4Z" fill="currentColor"></path>
+</svg>
+</div>
+<h2 class="text-lg font-bold leading-tight tracking-[-0.015em]">Hackathon 2024</h2>
+</div>
+<div class="flex flex-1 justify-end gap-8">
+<div class="hidden md:flex items-center gap-9">
+<a class="text-sm font-medium leading-normal hover:text-primary transition-colors" href="#">Home</a>
+<a class="text-sm font-medium leading-normal hover:text-primary transition-colors" href="#">Schedule</a>
+<a class="text-sm font-medium leading-normal hover:text-primary transition-colors" href="#">Prizes</a>
+<a class="text-sm font-medium leading-normal hover:text-primary transition-colors" href="#">FAQ</a>
+</div>
+<div class="flex items-center gap-4">
+<button class="flex min-w-[84px] cursor-pointer items-center justify-center rounded-lg h-10 px-4 bg-primary text-white text-sm font-bold leading-normal hover:bg-blue-700 transition-all">
+<span class="truncate">Profile</span>
+</button>
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 border border-slate-200 dark:border-slate-700" data-alt="User profile avatar placeholder" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAn8TLqo_UxkL5BhUbPsZDxqptYFxr9vfs-xaHQ9MadQCdJuYan_fbUeWIMLOhqRHCFp2uFf9h9BL3UsDmwZxO511uZ6MV3ZgkeORF_V_fhNZnQEhZSj_4ZVkuqcIV8hBvHX5UY3llnkr9zqkq6wUl71qWS3VHnPivWtG0W-uMiXFZjDoM7Ub4EElBDHGFEfp8XqIHeYhS-eEGciFCNexGNOIAo6vf9q7rSlAIs-GNFU14e2TQvh0esMnkbsnoXbQXy4ScH_tk9SZY");'></div>
+</div>
+</div>
+</div>
+</header>
+<main class="flex flex-col items-center py-10 px-4">
+<div class="w-full max-w-[960px] flex flex-col gap-8">
+<!-- Page Heading & Progress -->
+<div class="flex flex-col gap-6">
+<div class="flex flex-wrap justify-between items-end gap-3 px-4">
+<div class="flex min-w-72 flex-col gap-2">
+<h1 class="text-4xl font-black leading-tight tracking-[-0.033em]">Registration Step 3: Application</h1>
+<p class="text-slate-500 dark:text-[#929bc9] text-lg font-normal leading-normal">Tell us more about yourself to complete your application for the 2024 season.</p>
+</div>
+</div>
+<div class="flex flex-col gap-3 px-4">
+<div class="flex gap-6 justify-between items-center">
+<p class="text-base font-semibold leading-normal">Registration Progress</p>
+<p class="text-primary dark:text-white text-sm font-bold leading-normal">75% Complete</p>
+</div>
+<div class="rounded-full bg-slate-200 dark:bg-[#323b67] h-3 overflow-hidden">
+<div class="h-full rounded-full bg-primary" style="width: 75%;"></div>
+</div>
+<p class="text-slate-500 dark:text-[#929bc9] text-sm font-normal leading-normal">Step 3 of 4: Profile &amp; Skills</p>
+</div>
+</div>
+<form class="flex flex-col gap-6">
+<!-- Section 1: Personal Information -->
+<div class="bg-white dark:bg-[#191e33] p-6 rounded-xl border border-slate-200 dark:border-[#323b67] shadow-sm">
+<div class="flex items-center gap-2 mb-6">
+<span class="material-symbols-outlined text-primary">person</span>
+<h2 class="text-xl font-bold leading-tight tracking-[-0.015em]">Personal Information</h2>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<label class="flex flex-col gap-2">
+<span class="text-sm font-semibold">District</span>
+<input class="form-input w-full rounded-lg border border-slate-300 dark:border-[#323b67] bg-slate-50 dark:bg-[#111422] h-12 px-4 text-base focus:ring-2 focus:ring-primary/20 outline-none transition-all placeholder:text-slate-400 dark:placeholder:text-[#929bc9]" placeholder="e.g. Manhattan" type="text"/>
+</label>
+<label class="flex flex-col gap-2">
+<span class="text-sm font-semibold">School Name</span>
+<input class="form-input w-full rounded-lg border border-slate-300 dark:border-[#323b67] bg-slate-50 dark:bg-[#111422] h-12 px-4 text-base focus:ring-2 focus:ring-primary/20 outline-none transition-all placeholder:text-slate-400 dark:placeholder:text-[#929bc9]" placeholder="e.g. Science High School" type="text"/>
+</label>
+<label class="flex flex-col gap-2 md:col-span-2">
+<span class="text-sm font-semibold">Class / Grade Level</span>
+<select class="form-select w-full rounded-lg border border-slate-300 dark:border-[#323b67] bg-slate-50 dark:bg-[#111422] h-12 px-4 text-base focus:ring-2 focus:ring-primary/20 outline-none transition-all appearance-none cursor-pointer">
+<option disabled="" selected="" value="">Select your current class</option>
+<option value="9">Freshman (Grade 9)</option>
+<option value="10">Sophomore (Grade 10)</option>
+<option value="11">Junior (Grade 11)</option>
+<option value="12">Senior (Grade 12)</option>
+<option value="college">College / Undergraduate</option>
+</select>
+</label>
+</div>
+</div>
+<!-- Section 2: About You -->
+<div class="bg-white dark:bg-[#191e33] p-6 rounded-xl border border-slate-200 dark:border-[#323b67] shadow-sm">
+<div class="flex items-center gap-2 mb-6">
+<span class="material-symbols-outlined text-primary">description</span>
+<h2 class="text-xl font-bold leading-tight tracking-[-0.015em]">About You</h2>
+</div>
+<label class="flex flex-col gap-2">
+<span class="text-sm font-semibold">Short Bio</span>
+<p class="text-xs text-slate-500 dark:text-[#929bc9] mb-1">Tell us about your interests, past projects, or why you want to join this hackathon.</p>
+<textarea class="form-textarea w-full rounded-lg border border-slate-300 dark:border-[#323b67] bg-slate-50 dark:bg-[#111422] p-4 text-base focus:ring-2 focus:ring-primary/20 outline-none transition-all placeholder:text-slate-400 dark:placeholder:text-[#929bc9] resize-none" placeholder="I am a passionate developer who loves building web apps and exploring AI..." rows="5"></textarea>
+</label>
+</div>
+<!-- Section 3: Skills & Setup -->
+<div class="bg-white dark:bg-[#191e33] p-6 rounded-xl border border-slate-200 dark:border-[#323b67] shadow-sm">
+<div class="flex items-center gap-2 mb-6">
+<span class="material-symbols-outlined text-primary">terminal</span>
+<h2 class="text-xl font-bold leading-tight tracking-[-0.015em]">Skills &amp; Setup</h2>
+</div>
+<div class="flex flex-col gap-6">
+<label class="flex flex-col gap-2">
+<span class="text-sm font-semibold">English Proficiency Level</span>
+<select class="form-select w-full rounded-lg border border-slate-300 dark:border-[#323b67] bg-slate-50 dark:bg-[#111422] h-12 px-4 text-base focus:ring-2 focus:ring-primary/20 outline-none transition-all cursor-pointer">
+<option disabled="" selected="" value="">Select level</option>
+<option value="basic">Basic / Elementary</option>
+<option value="intermediate">Intermediate</option>
+<option value="advanced">Advanced / Professional</option>
+<option value="native">Native / Bilingual</option>
+</select>
+</label>
+<div class="flex items-start gap-4 p-4 rounded-lg bg-primary/5 dark:bg-primary/10 border border-primary/20">
+<div class="flex items-center h-6">
+<input class="size-5 rounded border-slate-300 dark:border-[#323b67] text-primary focus:ring-primary bg-white dark:bg-[#111422]" id="laptop-check" type="checkbox"/>
+</div>
+<label class="flex flex-col cursor-pointer" for="laptop-check">
+<span class="text-sm font-bold">Laptop Availability</span>
+<span class="text-xs text-slate-500 dark:text-[#929bc9]">I will bring my own laptop to the event.</span>
+</label>
+</div>
+</div>
+</div>
+<!-- Footer Action -->
+<div class="flex flex-col gap-4 mt-4">
+<button class="w-full flex items-center justify-center gap-2 rounded-xl py-4 bg-gradient-to-r from-primary to-[#4a67ff] text-white text-lg font-bold shadow-lg shadow-primary/20 hover:scale-[1.01] transition-transform" type="submit">
+<span>Submit Application</span>
+<span class="material-symbols-outlined">send</span>
+</button>
+<p class="text-center text-xs text-slate-400 dark:text-[#929bc9]">
+                        By submitting, you agree to the Hackathon 2024 Terms of Service and Privacy Policy.
+                    </p>
+</div>
+</form>
+</div>
+</main>
+<footer class="py-10 border-t border-slate-200 dark:border-[#232948] mt-10">
+<div class="max-w-[960px] mx-auto px-4 flex flex-wrap justify-between items-center gap-6">
+<div class="flex items-center gap-3 opacity-60">
+<div class="size-5">
+<svg fill="none" viewbox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+<path d="M4 4H17.3334V17.3334H30.6666V30.6666H44V44H4V4Z" fill="currentColor"></path>
+</svg>
+</div>
+<span class="text-sm font-medium">© 2024 Hackathon Universe</span>
+</div>
+<div class="flex gap-6">
+<a class="text-slate-400 hover:text-primary transition-colors" href="#"><span class="material-symbols-outlined">public</span></a>
+<a class="text-slate-400 hover:text-primary transition-colors" href="#"><span class="material-symbols-outlined">share</span></a>
+<a class="text-slate-400 hover:text-primary transition-colors" href="#"><span class="material-symbols-outlined">mail</span></a>
+</div>
+</div>
+</footer>
+</body></html>

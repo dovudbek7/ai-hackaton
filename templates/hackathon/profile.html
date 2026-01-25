@@ -1,0 +1,154 @@
+{% extends 'hackathon/base.html' %}
+{% load static %}
+
+{% block title %}Profil - AI Hackaton{% endblock %}
+
+{% block content %}
+<div class="relative flex flex-col w-full min-h-screen">
+    <header
+        class="flex items-center justify-between whitespace-nowrap border-b border-solid border-slate-200 dark:border-white/10 px-6 md:px-10 py-3 bg-background-light dark:bg-background-dark sticky top-0 z-50">
+        <div class="flex items-center gap-4 text-slate-900 dark:text-white">
+            <div class="size-6 text-primary">
+                <svg fill="none" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+                    <path
+                        d="M42.4379 44C42.4379 44 36.0744 33.9038 41.1692 24C46.8624 12.9336 42.2078 4 42.2078 4L7.01134 4C7.01134 4 11.6577 12.932 5.96912 23.9969C0.876273 33.9029 7.27094 44 7.27094 44L42.4379 44Z"
+                        fill="currentColor"></path>
+                </svg>
+            </div>
+            <h2 class="text-xl font-bold tracking-tight text-white"><a href="{% url 'landing' %}">AI HACKATON</a></h2>
+        </div>
+        <div class="flex items-center gap-4">
+            <a href="{% url 'logout' %}"
+                class="flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-700 dark:text-white/80 hover:text-red-500 dark:hover:text-red-400 transition-colors">
+                <span class="material-symbols-outlined text-[20px]">logout</span>
+                <span class="hidden md:inline">Chiqish</span>
+            </a>
+        </div>
+    </header>
+
+    <main class="flex-1 flex flex-col items-center p-6">
+
+        <!-- Status Banners -->
+        {% if status == 'approved' %}
+        <div
+            class="w-full bg-green-500/10 border-b border-green-500/20 py-6 px-6 md:px-10 mb-8 rounded-lg animate-fade-in status-banner-enter status-accepted-glow">
+            <div class="max-w-[960px] mx-auto">
+                <h2 class="text-green-500 text-xl font-bold flex items-center gap-2 mb-4">
+                    <span class="material-symbols-outlined text-2xl">celebration</span>
+                    Tabriklaymiz! Siz qabul qilindingiz 🎉
+                </h2>
+                <p class="text-green-600/80 text-sm mb-4">Siz AI Hackaton ishtirokchisi sifatida tasdiqlangan. Batafsil
+                    ma'lumot uchun Telegram guruhimizga qo'shiling.</p>
+
+                <div class="grid md:grid-cols-2 gap-6 mt-6">
+                    <div class="bg-white/5 p-4 rounded-lg border border-green-500/20">
+                        <h3 class="text-green-500 font-bold mb-2">Telegram Guruh</h3>
+                        <a href="https://t.me/ai_hackaton_2024" target="_blank"
+                            class="inline-flex items-center gap-2 text-green-600 hover:text-green-500 text-sm font-medium">
+                            <span class="material-symbols-outlined text-sm">open_in_new</span>
+                            Guruhga qo'shilish
+                        </a>
+                    </div>
+                    <div class="bg-white/5 p-4 rounded-lg border border-green-500/20">
+                        <h3 class="text-green-500 font-bold mb-2">QR Code</h3>
+                        <img src="{% static 'hackathon/images/telegram_qr.png' %}" alt="Telegram QR"
+                            class="w-32 h-32 rounded">
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% elif status == 'rejected' %}
+        <div
+            class="w-full bg-red-500/10 border-b border-red-500/20 py-4 px-6 md:px-10 mb-8 rounded-lg animate-fade-in status-banner-enter">
+            <div class="max-w-[960px] mx-auto">
+                <h2 class="text-red-500 text-lg font-bold flex items-center gap-2">
+                    <span class="material-symbols-outlined">cancel</span>
+                    Afsuski, siz tanlovdan o'ta olmadingiz
+                </h2>
+                <p class="text-red-400 mt-1">Keyingi safar albatta urinib ko'ring.</p>
+            </div>
+        </div>
+        {% else %}
+        <div
+            class="w-full bg-yellow-500/10 border-b border-yellow-500/20 py-4 px-6 md:px-10 mb-8 rounded-lg animate-fade-in status-banner-enter">
+            <div class="max-w-[960px] mx-auto flex items-center gap-2">
+                <span class="material-symbols-outlined text-yellow-500">hourglass_empty</span>
+                <div>
+                    <h2 class="text-yellow-500 text-lg font-bold">Arizangiz ko'rib chiqilmoqda</h2>
+                    <p class="text-yellow-500/60 text-xs">Iltimos, javobni kuting. Natija tez orada e'lon qilinadi.</p>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="w-full max-w-[960px] flex flex-col gap-6">
+            <!-- Profile Info Card -->
+            <div
+                class="bg-white dark:bg-white/5 p-6 rounded-xl border border-slate-200 dark:border-white/10 shadow-lg profile-card-enter">
+                <div class="flex items-center gap-6">
+                    <div
+                        class="bg-gradient-to-br from-primary to-purple-600 aspect-square rounded-full size-24 flex items-center justify-center text-white text-3xl font-bold shadow-inner">
+                        {{ full_name|slice:":1" }}
+                    </div>
+                    <div>
+                        <h2 class="text-2xl font-bold text-slate-900 dark:text-white">{{ full_name }}</h2>
+                        <p class="text-slate-500 dark:text-white/60 text-sm mt-1">{{ phone }}</p>
+                        <p class="text-slate-500 dark:text-white/60 text-sm">{{ region }}</p>
+                        <div class="flex gap-2 mt-3">
+                            <span
+                                class="px-2 py-1 bg-primary/10 text-primary rounded text-xs font-bold uppercase tracking-wider">Ishtirokchi</span>
+                            {% if status == 'approved' %}
+                            <span
+                                class="px-2 py-1 bg-green-500/10 text-green-500 rounded text-xs font-bold uppercase tracking-wider">Qabul
+                                qilindi</span>
+                            {% elif status == 'rejected' %}
+                            <span
+                                class="px-2 py-1 bg-red-500/10 text-red-500 rounded text-xs font-bold uppercase tracking-wider">Rad
+                                etildi</span>
+                            {% else %}
+                            <span
+                                class="px-2 py-1 bg-yellow-500/10 text-yellow-500 rounded text-xs font-bold uppercase tracking-wider">Kutilmoqda</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-8 grid md:grid-cols-2 gap-6 pt-6 border-t border-slate-200 dark:border-white/10">
+                    <div>
+                        <h3 class="text-slate-900 dark:text-white font-bold mb-4">Ma'lumotlar</h3>
+                        <div class="space-y-3">
+                            <div>
+                                <p class="text-xs text-slate-500 dark:text-white/40 uppercase tracking-widest">Maktab
+                                </p>
+                                <p class="text-slate-800 dark:text-white">{{ school }}</p>
+                            </div>
+                            <div>
+                                <p class="text-xs text-slate-500 dark:text-white/40 uppercase tracking-widest">Sinf</p>
+                                <p class="text-slate-800 dark:text-white">{{ grade }}</p>
+                            </div>
+                            <div>
+                                <p class="text-xs text-slate-500 dark:text-white/40 uppercase tracking-widest">Ingliz
+                                    tili</p>
+                                <p class="text-slate-800 dark:text-white capitalize">{{ english_level }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 class="text-slate-900 dark:text-white font-bold mb-4">Jihozlar</h3>
+                        <div class="flex items-center gap-2 p-3 bg-slate-50 dark:bg-white/5 rounded-lg">
+                            {% if 'laptop' in device or 'PC' in device %}
+                            <span class="material-symbols-outlined text-green-500">laptop_mac</span>
+                            <span class="text-slate-700 dark:text-white text-sm">{{ device }}</span>
+                            {% else %}
+                            <span class="material-symbols-outlined text-yellow-500">laptop_mac</span>
+                            <span class="text-slate-700 dark:text-white text-sm">{{ device }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+{% endblock %}
