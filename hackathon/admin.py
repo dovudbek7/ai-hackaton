@@ -87,6 +87,35 @@ def export_to_excel(modeladmin, request, queryset):
 export_to_excel.short_description = "Excel faylga yuklab olish"
 
 
+def export_to_json(modeladmin, request, queryset):
+    """JSON faylga yuklab olish"""
+    import json
+    from django.http import HttpResponse # Ensure output is correct type
+    
+    data = []
+    for app in queryset:
+        data.append({
+            "full_name": app.full_name,
+            "phone": app.phone,
+            "region": app.region.name if app.region else "",
+            "school": app.school.name if app.school else "",
+            "grade": app.get_grade_display(),
+            "device": app.get_device_display(),
+            "english_level": app.get_english_level_display(),
+            "status": app.get_status_display(),
+            "created_at": app.created_at.strftime('%Y-%m-%d %H:%M'),
+        })
+    
+    response = HttpResponse(
+        json.dumps(data, ensure_ascii=False, indent=2),
+        content_type='application/json'
+    )
+    response['Content-Disposition'] = 'attachment; filename=arizalar.json'
+    return response
+
+export_to_json.short_description = "JSON faylga yuklab olish"
+
+
 @admin.register(Application)
 class ApplicationAdmin(admin.ModelAdmin):
     list_display = [
@@ -105,7 +134,7 @@ class ApplicationAdmin(admin.ModelAdmin):
     list_editable = ['status']
     autocomplete_fields = ['region', 'school']
     
-    actions = [export_to_excel]
+    actions = [export_to_excel, export_to_json]
     
     fieldsets = (
         ('Shaxsiy ma\'lumotlar', {
