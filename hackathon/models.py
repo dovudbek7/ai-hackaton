@@ -70,7 +70,13 @@ class Application(models.Model):
     
     STATUS_CHOICES = [
         ('pending', 'KUTILMOQDA'),
-        ('approved', 'QABUL QILINDI'),
+        ('accepted', 'QABUL QILINDI'),
+        ('rejected', 'RAD ETILDI'),
+    ]
+    
+    DECISION_CHOICES = [
+        ('pending', 'KUTILMOQDA'),
+        ('accepted', 'QABUL QILINDI'),
         ('rejected', 'RAD ETILDI'),
     ]
     
@@ -115,6 +121,18 @@ class Application(models.Model):
         default='pending',
         verbose_name="Holat"
     )
+
+    # AI Analysis Fields
+    computer_skill = models.BooleanField(null=True, blank=True, verbose_name="Kompyuter savodxonligi")
+    english_skill = models.BooleanField(null=True, blank=True, verbose_name="Ingliz tili")
+    decision = models.CharField(
+        max_length=10,
+        choices=DECISION_CHOICES,
+        default='pending',
+        verbose_name="AI Qarori"
+    )
+    ai_reason = models.TextField(null=True, blank=True, verbose_name="AI Izohi")
+    analyzed_at = models.DateTimeField(null=True, blank=True, verbose_name="Tahlil vaqti")
     
     # Timestamps
     created_at = models.DateTimeField(default=timezone.now, verbose_name="Yaratilgan sana")

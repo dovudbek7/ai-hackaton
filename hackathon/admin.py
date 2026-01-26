@@ -125,12 +125,13 @@ class ApplicationAdmin(admin.ModelAdmin):
         'region', 
         'school', 
         'grade',
-        'status', 
+        'status',
+        'decision',
         'created_at'
     ]
-    list_filter = ['status', 'region', 'grade', 'english_level', 'device', 'created_at']
+    list_filter = ['status', 'decision', 'region', 'grade', 'english_level', 'device', 'created_at']
     search_fields = ['full_name', 'phone']
-    readonly_fields = ['created_at', 'updated_at']
+    readonly_fields = ['created_at', 'updated_at', 'analyzed_at']
     list_editable = ['status']
     autocomplete_fields = ['region', 'school']
     
@@ -145,6 +146,9 @@ class ApplicationAdmin(admin.ModelAdmin):
         }),
         ('Qo\'shimcha ma\'lumotlar', {
             'fields': ('about', 'device', 'english_level')
+        }),
+        ('AI Tahlil', {
+            'fields': ('decision', 'ai_reason', 'computer_skill', 'english_skill', 'analyzed_at')
         }),
         ('Holat', {
             'fields': ('status',)

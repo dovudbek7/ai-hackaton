@@ -5,22 +5,28 @@ from .models import Region, School, Application
 
 
 def landing_view(request):
+    if request.session.get('authenticated'):
+        return redirect('profile')
     return render(request, 'hackathon/landing.html')
 
 
 def register_view(request):
+    if request.session.get('authenticated'):
+        return redirect('profile')
     if request.method == 'POST':
         full_name = request.POST.get('full_name')
         phone = request.POST.get('phone')
         
         # Check if phone already exists
+        # Check if phone already exists
         if Application.objects.filter(phone=phone).exists():
-            error_message = "Bu telefon raqam allaqachon ro'yxatdan o'tgan"
-            return render(request, 'hackathon/register.html', {
-                'error_message': error_message,
-                'full_name': full_name,
-                'phone': phone
-            })
+            # If user exists, log them in directly and redirect to profile
+            # (Note: In production this would be insecure without OTP, but for demo it allows quick access)
+            application = Application.objects.get(phone=phone)
+            request.session['authenticated'] = True
+            request.session['phone'] = phone
+            request.session['application_id'] = application.id
+            return redirect('profile')
         
         # Save to session temporarily
         request.session['full_name'] = full_name
@@ -90,7 +96,18 @@ def form_view(request):
             request.session.flush()
             
             # Save application ID to new session
+            # Save application ID to new session
             request.session['application_id'] = application.id
+            request.session['authenticated'] = True
+            request.session['phone'] = phone
+            
+            # Trigger background AI analysis
+            try:
+                from .tasks import analyze_application
+                analyze_application.delay(application.id)
+            except Exception as e:
+                # Log error but don't fail the request
+                print(f"Failed to trigger AI analysis task: {e}")
             
             return redirect('profile')
             
@@ -101,7 +118,7 @@ def form_view(request):
                 'error_message': error_message
             })
     
-    return render(request, 'hackathon/form.html', {'regions': regions})
+    return render(request, 'hackathon/form.html', {'regions': regions}) 
 
 
 def profile_view(request):
@@ -147,6 +164,8 @@ def login_view(request):
     Login view - phone number entry
     Checks if phone exists and generates OTP
     """
+    if request.session.get('authenticated'):
+        return redirect('profile')
     if request.method == 'POST':
         phone = request.POST.get('phone')
         
