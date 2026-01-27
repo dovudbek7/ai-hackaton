@@ -10,7 +10,6 @@ urlpatterns = [
     
     # Authentication URLs
     path('login/', views.login_view, name='login'),
-    path('login/otp/', views.login_otp_view, name='login_otp'),
     path('logout/', views.logout_view, name='logout'),
     
     # AJAX endpoint

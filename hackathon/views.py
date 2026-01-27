@@ -2,7 +2,14 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse
 from django.db import IntegrityError
 from .models import Region, School, Application
+from django.conf import settings
+import requests
+from .utils import generate_otp, send_sms
+from datetime import datetime
 
+
+ESKIZ_AUTH_URL = "https://notify.eskiz.uz/api/auth/login"
+ESKIZ_SMS_URL = "https://notify.eskiz.uz/api/message/sms/send"
 
 def landing_view(request):
     if request.session.get('authenticated'):
@@ -13,39 +20,83 @@ def landing_view(request):
 def register_view(request):
     if request.session.get('authenticated'):
         return redirect('profile')
+
     if request.method == 'POST':
         full_name = request.POST.get('full_name')
         phone = request.POST.get('phone')
-        
-        # Check if phone already exists
-        # Check if phone already exists
+
+        # Existing user → auto login
         if Application.objects.filter(phone=phone).exists():
-            # If user exists, log them in directly and redirect to profile
-            # (Note: In production this would be insecure without OTP, but for demo it allows quick access)
             application = Application.objects.get(phone=phone)
             request.session['authenticated'] = True
             request.session['phone'] = phone
             request.session['application_id'] = application.id
             return redirect('profile')
-        
-        # Save to session temporarily
+
+        # Generate OTP
+        otp = generate_otp()
+
+        # Save to session
+        request.session['otp'] = otp
         request.session['full_name'] = full_name
         request.session['phone'] = phone
+
+        # SMS text
+        message = (
+            f"Kodni hech kimga bermang! "
+            f"Andijon Ai hackaton ga kirish uchun tasdiqlash kodi: {otp}"
+        )
+
+        # Send SMS
+        try:
+            send_sms(phone, message)
+        except Exception as e:
+            return render(request, 'hackathon/register.html', {
+                'error_message': "SMS yuborishda xatolik yuz berdi"
+            })
+
         return redirect('otp')
-    
+
     return render(request, 'hackathon/register.html')
 
 
 def otp_view(request):
     error_message = None
+
     if request.method == 'POST':
-        otp = request.POST.get('otp')
-        if otp == '111111':
+        entered_otp = request.POST.get('otp', '').strip()
+        session_otp = request.session.get('otp')
+
+        if not session_otp:
+            error_message = "Tasdiqlash kodi muddati tugagan"
+        elif entered_otp == session_otp:
+            # OTP to‘g‘ri
+            request.session.pop('otp', None)
+            request.session['authenticated'] = True
+            
+            # Check if it was a login
+            otp_phone = request.session.get('otp_phone')
+            if otp_phone:
+                request.session['phone'] = otp_phone
+                request.session.pop('otp_phone', None)
+                request.session.pop('otp_created_at', None)
+                return redirect('profile')
+            
+            # If not login, it's registration
             return redirect('form')
         else:
             error_message = "Kod noto'g'ri, qayta urinib ko'ring"
-    return render(request, 'hackathon/otp_send.html', {'error_message': error_message})
 
+    # Determine title and percentage for template
+    is_login = request.session.get('otp_phone') is not None
+    title = "Kirish" if is_login else "Ro‘yxatdan o‘tish"
+    percentage = "100%" if is_login else "50%"
+
+    return render(request, 'hackathon/otp_send.html', {
+        'error_message': error_message,
+        'title': title,
+        'percentage': percentage
+    })
 
 def form_view(request):
     # Get regions for dropdown
@@ -160,80 +211,48 @@ def profile_view(request):
 
 
 def login_view(request):
-    """
-    Login view - phone number entry
-    Checks if phone exists and generates OTP
-    """
     if request.session.get('authenticated'):
         return redirect('profile')
+
     if request.method == 'POST':
         phone = request.POST.get('phone')
-        
-        # Check if phone exists in Application table
+
         try:
             application = Application.objects.get(phone=phone)
-            
-            # Generate OTP (TEST MODE: always 111111)
-            otp = '111111'
-            
-            # Save OTP data in session
-            from datetime import datetime
+
+            # Generate OTP
+            otp = generate_otp()
+
+            # Save OTP info in session
             request.session['otp'] = otp
             request.session['otp_phone'] = phone
             request.session['otp_created_at'] = datetime.now().isoformat()
-            request.session['otp_used'] = False
-            
-            return redirect('login_otp')
-            
+            request.session['application_id'] = application.id
+
+            # SMS text
+            message = (
+                f"Kodni hech kimga bermang! "
+                f"Andijon Ai hackaton ga kirish uchun tasdiqlash kodi: {otp}"
+            )
+
+            try:
+                send_sms(phone, message)
+            except Exception:
+                return render(request, 'hackathon/login.html', {
+                    'error_message': "SMS yuborishda xatolik yuz berdi",
+                    'phone': phone
+                })
+
+            return redirect('otp')
+
         except Application.DoesNotExist:
-            error_message = "Bu raqam bilan ro'yxatdan o'tilmagan"
             return render(request, 'hackathon/login.html', {
-                'error_message': error_message,
+                'error_message': "Bu raqam bilan ro'yxatdan o'tilmagan",
                 'phone': phone
             })
-    
+
     return render(request, 'hackathon/login.html')
 
-
-def login_otp_view(request):
-    """
-    OTP verification view - SIMPLIFIED
-    Just check if OTP is 111111 and log them in
-    """
-    # Check if OTP data exists in session
-    if not request.session.get('otp_phone'):
-        return redirect('login')
-    
-    otp_phone = request.session.get('otp_phone')
-    error_message = None
-    
-    if request.method == 'POST':
-        entered_otp = request.POST.get('otp', '').strip()
-        
-        # Simple check: if OTP is 111111, log them in
-        if entered_otp == '111111':
-            # Create authenticated session
-            request.session['authenticated'] = True
-            request.session['phone'] = otp_phone
-            
-            # Get application ID
-            try:
-                application = Application.objects.get(phone=otp_phone)
-                request.session['application_id'] = application.id
-            except Application.DoesNotExist:
-                pass
-            
-            # Clear OTP data
-            request.session.pop('otp', None)
-            request.session.pop('otp_phone', None)
-            request.session.pop('otp_created_at', None)
-            request.session.pop('otp_used', None)
-            
-            return redirect('profile')
-        else:
-            error_message = "Tasdiqlash kodi noto'g'ri. 111111 ni kiriting"
-    
-    return render(request, 'hackathon/login_otp.html', {'error_message': error_message})
 
 
 def logout_view(request):

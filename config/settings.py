@@ -144,3 +144,6 @@ LINKSMS_URL = os.getenv('LINKSMS_URL', "https://notify.eskiz.uz/api/auth/login")
 LINKSMS_LOGIN = os.getenv('LINKSMS_LOGIN')
 LINKSMS_PASSWORD = os.getenv('LINKSMS_PASSWORD')
 LINKSMS_SENDER = os.getenv('LINKSMS_SENDER', "HACKATHON")
+
+ESKIZ_EMAIL = os.getenv("ESKIZ_EMAIL")
+ESKIZ_PASSWORD = os.getenv("ESKIZ_PASSWORD")

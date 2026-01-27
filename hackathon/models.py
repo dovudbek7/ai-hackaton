@@ -54,8 +54,8 @@ class Application(models.Model):
     
     DEVICE_CHOICES = [
         ('none', "Kompyuter yo'q"),
-        ('pc', 'PC'),
-        ('laptop', 'Laptop'),
+        ('pc', 'Shaxsiy kompyuter'),
+        ('laptop', 'Noutbuk'),
     ]
     
     ENGLISH_LEVEL_CHOICES = [
@@ -132,6 +132,7 @@ class Application(models.Model):
         verbose_name="AI Qarori"
     )
     ai_reason = models.TextField(null=True, blank=True, verbose_name="AI Izohi")
+    description_quality = models.CharField(max_length=20, null=True, blank=True, verbose_name="AI Sifat Bahosi")
     analyzed_at = models.DateTimeField(null=True, blank=True, verbose_name="Tahlil vaqti")
     
     # Timestamps
