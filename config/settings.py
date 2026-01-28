@@ -121,10 +121,13 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_URL = 'static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_DIRS = [BASE_DIR / 'static']
 
 CSRF_TRUSTED_ORIGINS = [
     "https://ed7f8e7b386e.ngrok-free.app",
+    "http://hackathon.robocode.uz:2580",
+    "https://hackathon.robocode.uz",
 ]
 
 import os
