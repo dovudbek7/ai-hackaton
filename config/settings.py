@@ -152,6 +152,16 @@ ESKIZ_EMAIL = os.getenv("ESKIZ_EMAIL") or os.getenv("LINKSMS_LOGIN")
 ESKIZ_PASSWORD = os.getenv("ESKIZ_PASSWORD") or os.getenv("LINKSMS_PASSWORD")
 
 # Logging Configuration
+# Ensure log directory exists to avoid FileHandler configuration errors
+LOG_DIR = os.environ.get('LOG_DIR', str(BASE_DIR / 'logs'))
+try:
+    os.makedirs(LOG_DIR, exist_ok=True)
+except Exception:
+    # If we can't create the preferred log directory, fall back to /tmp
+    LOG_DIR = '/tmp'
+
+LOG_FILE = os.path.join(LOG_DIR, 'debug.log')
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -165,7 +175,7 @@ LOGGING = {
         'file': {
             'level': 'INFO',
             'class': 'logging.FileHandler',
-            'filename': '/tmp/ai-hackaton/app.log',
+            'filename': LOG_FILE,
             'formatter': 'verbose',
         },
         'console': {
@@ -179,6 +189,11 @@ LOGGING = {
             'handlers': ['file', 'console'],
             'level': 'INFO',
             'propagate': True,
+        },
+        'django.request': {
+            'handlers': ['file', 'console'],
+            'level': 'ERROR',
+            'propagate': False,
         },
         'hackathon': {
             'handlers': ['file', 'console'],
