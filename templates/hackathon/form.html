@@ -1,151 +1,226 @@
-{% extends 'hackathon/base.html' %}
-{% load static %}
+{% extends 'hackathon/base.html' %} {% load static %} {% block title %}Anketa -
+AI Hackaton{% endblock %} {% block content %}
+<div
+  class="relative flex min-h-screen w-full flex-col overflow-x-hidden gradient-bg"
+>
+  <div class="layout-container flex h-full grow flex-col">
+    <header
+      class="flex items-center justify-between whitespace-nowrap border-b border-solid border-slate-200 dark:border-[#232948] px-6 md:px-10 py-4 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-md sticky top-0 z-50"
+    >
+      <div class="flex items-center gap-3 text-primary dark:text-white">
+        <div class="size-6">
+          <svg
+            fill="none"
+            viewBox="0 0 48 48"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M42.4379 44C42.4379 44 36.0744 33.9038 41.1692 24C46.8624 12.9336 42.2078 4 42.2078 4L7.01134 4C7.01134 4 11.6577 12.932 5.96912 23.9969C0.876273 33.9029 7.27094 44 7.27094 44L42.4379 44Z"
+              fill="currentColor"
+            ></path>
+          </svg>
+        </div>
+        <h2 class="text-xl font-bold tracking-tight text-white">
+          <a href="{% url 'landing' %}">AI HACKATON</a>
+        </h2>
+      </div>
+    </header>
 
-{% block title %}Anketa - AI Hackaton{% endblock %}
+    <main class="flex-1 flex items-center justify-center px-4 py-12">
+      <div class="w-full max-w-[600px] flex flex-col gap-8">
+        <div class="flex flex-col gap-3 px-2">
+          <div class="flex gap-6 justify-between items-end">
+            <p class="text-slate-900 dark:text-white text-base font-bold">
+              Ro'yxatdan o'tish
+            </p>
+            <p class="text-primary font-bold text-sm">75% Yakunlandi</p>
+          </div>
+          <div
+            class="h-2 rounded-full bg-slate-200 dark:bg-[#323b67] overflow-hidden"
+          >
+            <div
+              class="h-full rounded-full bg-primary"
+              style="width: 75%"
+            ></div>
+          </div>
+          <p
+            class="text-slate-500 dark:text-[#929bc9] text-xs font-medium uppercase tracking-wider"
+          >
+            Ishtirokchi anketasi
+          </p>
+        </div>
 
-{% block content %}
-<div class="relative flex min-h-screen w-full flex-col overflow-x-hidden gradient-bg">
-    <div class="layout-container flex h-full grow flex-col">
-        <header
-            class="flex items-center justify-between whitespace-nowrap border-b border-solid border-slate-200 dark:border-[#232948] px-6 md:px-10 py-4 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-md sticky top-0 z-50">
-            <div class="flex items-center gap-3 text-primary dark:text-white">
-                <div class="size-6">
-                    <svg fill="none" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
-                        <path
-                            d="M42.4379 44C42.4379 44 36.0744 33.9038 41.1692 24C46.8624 12.9336 42.2078 4 42.2078 4L7.01134 4C7.01134 4 11.6577 12.932 5.96912 23.9969C0.876273 33.9029 7.27094 44 7.27094 44L42.4379 44Z"
-                            fill="currentColor"></path>
-                    </svg>
-                </div>
-                <h2 class="text-xl font-bold tracking-tight text-white"><a href="{% url 'landing' %}">AI HACKATON</a>
-                </h2>
+        <div
+          class="bg-white dark:bg-[#191e33] border border-slate-200 dark:border-[#323b67] rounded-xl p-8 shadow-2xl shadow-black/10 dark:shadow-black/40 animate-fade-in"
+        >
+          <div class="text-center mb-8">
+            <h1
+              class="text-slate-900 dark:text-white text-3xl font-bold tracking-tight mb-2"
+            >
+              Ishtirokchi anketasi
+            </h1>
+            <p class="text-slate-500 dark:text-[#929bc9] text-sm">
+              Bizga o'zingiz haqingizda so'zlab bering
+            </p>
+          </div>
+
+          {% if error_message %}
+          <div
+            class="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-lg"
+          >
+            <p class="text-red-500 text-sm flex items-center gap-2">
+              <span class="material-symbols-outlined text-sm">error</span>
+              {{ error_message }}
+            </p>
+          </div>
+          {% endif %}
+
+          <!-- Region Warning (dynamically shown by JS) -->
+          <div
+            id="region-warning"
+            class="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-lg hidden"
+          >
+            <p
+              class="text-red-600 dark:text-red-500 text-sm flex items-center gap-2"
+            >
+              <span class="material-symbols-outlined text-sm">warning</span>
+              <span id="warning-message">Bu hududda qabul tugagan</span>
+            </p>
+          </div>
+
+          <form
+            id="application-form"
+            class="flex flex-col gap-6"
+            method="POST"
+            action="{% url 'form' %}"
+          >
+            {% csrf_token %}
+
+            <div class="grid md:grid-cols-2 gap-6">
+              <div class="flex flex-col gap-2">
+                <label
+                  class="text-slate-700 dark:text-white text-sm font-semibold px-1"
+                  >Qaysi tumanda yashaysiz?</label
+                >
+                <select
+                  id="region-select"
+                  name="region"
+                  required
+                  class="w-full rounded-lg border border-slate-200 dark:border-[#323b67] bg-slate-50 dark:bg-[#101322] p-3 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all input-animated"
+                >
+                  <option value="">Tanlang...</option>
+                  {% for region in regions %}
+                  <option
+                    value="{{ region.id }}"
+                    data-open="{{ region.is_open }}"
+                    data-warning="{{ region.warning_message }}"
+                  >
+                    {{ region.name }}
+                  </option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div class="flex flex-col gap-2">
+                <label
+                  class="text-slate-700 dark:text-white text-sm font-semibold px-1"
+                  >Maktab nomi</label
+                >
+                <select
+                  id="school-select"
+                  name="school"
+                  required
+                  class="w-full rounded-lg border border-slate-200 dark:border-[#323b67] bg-slate-50 dark:bg-[#101322] p-3 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all input-animated"
+                  disabled
+                >
+                  <option value="">Avval hududni tanlang...</option>
+                </select>
+              </div>
             </div>
-        </header>
 
-        <main class="flex-1 flex items-center justify-center px-4 py-12">
-            <div class="w-full max-w-[600px] flex flex-col gap-8">
-                <div class="flex flex-col gap-3 px-2">
-                    <div class="flex gap-6 justify-between items-end">
-                        <p class="text-slate-900 dark:text-white text-base font-bold">Ro'yxatdan o'tish</p>
-                        <p class="text-primary font-bold text-sm">75% Yakunlandi</p>
-                    </div>
-                    <div class="h-2 rounded-full bg-slate-200 dark:bg-[#323b67] overflow-hidden">
-                        <div class="h-full rounded-full bg-primary" style="width: 75%;"></div>
-                    </div>
-                    <p class="text-slate-500 dark:text-[#929bc9] text-xs font-medium uppercase tracking-wider">
-                        Ishtirokchi anketasi</p>
-                </div>
-
-                <div
-                    class="bg-white dark:bg-[#191e33] border border-slate-200 dark:border-[#323b67] rounded-xl p-8 shadow-2xl shadow-black/10 dark:shadow-black/40 animate-fade-in">
-                    <div class="text-center mb-8">
-                        <h1 class="text-slate-900 dark:text-white text-3xl font-bold tracking-tight mb-2">Ishtirokchi
-                            anketasi</h1>
-                        <p class="text-slate-500 dark:text-[#929bc9] text-sm">Bizga o'zingiz haqingizda so'zlab bering
-                        </p>
-                    </div>
-
-                    {% if error_message %}
-                    <div class="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-lg">
-                        <p class="text-red-500 text-sm flex items-center gap-2">
-                            <span class="material-symbols-outlined text-sm">error</span>
-                            {{ error_message }}
-                        </p>
-                    </div>
-                    {% endif %}
-
-                    <!-- Region Warning (dynamically shown by JS) -->
-                    <div id="region-warning" class="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-lg hidden">
-                        <p class="text-red-600 dark:text-red-500 text-sm flex items-center gap-2">
-                            <span class="material-symbols-outlined text-sm">warning</span>
-                            <span id="warning-message">Bu hududda qabul tugagan</span>
-                        </p>
-                    </div>
-
-                    <form id="application-form" class="flex flex-col gap-6" method="POST" action="{% url 'form' %}">
-                        {% csrf_token %}
-
-                        <div class="grid md:grid-cols-2 gap-6">
-                            <div class="flex flex-col gap-2">
-                                <label class="text-slate-700 dark:text-white text-sm font-semibold px-1">Qaysi tumanda
-                                    yashaysiz?</label>
-                                <select id="region-select" name="region" required
-                                    class="w-full rounded-lg border border-slate-200 dark:border-[#323b67] bg-slate-50 dark:bg-[#101322] p-3 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all input-animated">
-                                    <option value="">Tanlang...</option>
-                                    {% for region in regions %}
-                                    <option value="{{ region.id }}" data-open="{{ region.is_open }}"
-                                        data-warning="{{ region.warning_message }}">{{ region.name }}</option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-                            <div class="flex flex-col gap-2">
-                                <label class="text-slate-700 dark:text-white text-sm font-semibold px-1">Maktab
-                                    nomi</label>
-                                <select id="school-select" name="school" required
-                                    class="w-full rounded-lg border border-slate-200 dark:border-[#323b67] bg-slate-50 dark:bg-[#101322] p-3 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all input-animated"
-                                    disabled>
-                                    <option value="">Avval hududni tanlang...</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <div class="grid md:grid-cols-2 gap-6">
-                            <div class="flex flex-col gap-2">
-                                <label class="text-slate-700 dark:text-white text-sm font-semibold px-1">Nechanchi
-                                    sinfda o'qiysiz?</label>
-                                <select name="grade" required
-                                    class="w-full rounded-lg border border-slate-200 dark:border-[#323b67] bg-slate-50 dark:bg-[#101322] p-3 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all input-animated">
-                                    <option value="">Tanlang...</option>
-                                    <option value="9">9-sinf</option>
-                                    <option value="10">10-sinf</option>
-                                    <option value="11">11-sinf</option>
-                                </select>
-                            </div>
-                            <div class="flex flex-col gap-2">
-                                <label class="text-slate-700 dark:text-white text-sm font-semibold px-1">Ingliz tili
-                                    darajasi</label>
-                                <select name="english_level"
-                                    class="w-full rounded-lg border border-slate-200 dark:border-[#323b67] bg-slate-50 dark:bg-[#101322] p-3 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all input-animated">
-                                    <option value="bilmayman">Bilmayman</option>
-                                    <option value="A1">A1</option>
-                                    <option value="A2">A2</option>
-                                    <option value="B1">B1</option>
-                                    <option value="B2">B2</option>
-                                    <option value="C1">C1</option>
-                                    <option value="C2">C2</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <div class="flex flex-col gap-2">
-                            <label class="text-slate-700 dark:text-white text-sm font-semibold px-1">Shaxsiy
-                                kompyuteringiz bormi ?</label>
-                            <select name="device" required
-                                class="w-full rounded-lg border border-slate-200 dark:border-[#323b67] bg-slate-50 dark:bg-[#101322] p-3 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all input-animated">
-                                <option value="">Tanlang...</option>
-                                <option value="none">Kompyuter yo'q</option>
-                                <option value="pc">Shaxsiy kompyuter</option>
-                                <option value="laptop">Noutbuk</option>
-                            </select>
-                        </div>
-
-                        <div class="flex flex-col gap-2">
-                            <label class="text-slate-700 dark:text-white text-sm font-semibold px-1">O'zingiz haqingizda
-                                description yozing (Bu description qabul qilinishingiz uchun muhim)</label>
-                            <textarea name="about" rows="3" required minlength="65" maxlength="500"
-                                class="w-full rounded-lg border border-slate-200 dark:border-[#323b67] bg-slate-50 dark:bg-[#101322] p-3 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all input-animated"
-                                placeholder="Qobiliyatlaringiz va qiziqishlaringiz..."></textarea>
-                        </div>
-
-                        <div class="pt-4 flex flex-col gap-4">
-                            <button id="submit-btn" type="submit"
-                                class="bg-primary hover:bg-primary-dark w-full h-14 rounded-lg text-white font-bold text-base tracking-wide flex items-center justify-center gap-2 hover:brightness-110 active:scale-[0.98] transition-all shadow-xl shadow-primary/30 btn-primary btn-animated">
-                                Arizani yuborish
-                            </button>
-                        </div>
-                    </form>
-                </div>
+            <div class="grid md:grid-cols-2 gap-6">
+              <div class="flex flex-col gap-2">
+                <label
+                  class="text-slate-700 dark:text-white text-sm font-semibold px-1"
+                  >Nechanchi sinfda o'qiysiz?</label
+                >
+                <select
+                  name="grade"
+                  required
+                  class="w-full rounded-lg border border-slate-200 dark:border-[#323b67] bg-slate-50 dark:bg-[#101322] p-3 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all input-animated"
+                >
+                  <option value="">Tanlang...</option>
+                  <option value="9">9-sinf</option>
+                  <option value="10">10-sinf</option>
+                  <option value="11">11-sinf</option>
+                </select>
+              </div>
+              <div class="flex flex-col gap-2">
+                <label
+                  class="text-slate-700 dark:text-white text-sm font-semibold px-1"
+                  >Ingliz tili darajasi</label
+                >
+                <select
+                  name="english_level"
+                  class="w-full rounded-lg border border-slate-200 dark:border-[#323b67] bg-slate-50 dark:bg-[#101322] p-3 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all input-animated"
+                >
+                  <option value="bilmayman">Bilmayman</option>
+                  <option value="A1">A1</option>
+                  <option value="A2">A2</option>
+                  <option value="B1">B1</option>
+                  <option value="B2">B2</option>
+                  <option value="C1">C1</option>
+                  <option value="C2">C2</option>
+                </select>
+              </div>
             </div>
-        </main>
-    </div>
+
+            <div class="flex flex-col gap-2">
+              <label
+                class="text-slate-700 dark:text-white text-sm font-semibold px-1"
+                >Shaxsiy kompyuteringiz bormi ?</label
+              >
+              <select
+                name="device"
+                required
+                class="w-full rounded-lg border border-slate-200 dark:border-[#323b67] bg-slate-50 dark:bg-[#101322] p-3 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all input-animated"
+              >
+                <option value="">Tanlang...</option>
+                <option value="none">Kompyuter yo'q</option>
+                <option value="pc">Shaxsiy kompyuter</option>
+                <option value="laptop">Noutbuk</option>
+              </select>
+            </div>
+
+            <div class="flex flex-col gap-2">
+              <label
+                class="text-slate-700 dark:text-white text-sm font-semibold px-1"
+                >O'zingiz haqingizda minimum 65 ta harfdan iborat tarif yozing
+                (Bu qabul qilinishingiz uchun juda muhim)</label
+              >
+              <textarea
+                name="about"
+                rows="3"
+                required
+                minlength="65"
+                maxlength="500"
+                class="w-full rounded-lg border border-slate-200 dark:border-[#323b67] bg-slate-50 dark:bg-[#101322] p-3 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all input-animated"
+                placeholder="Qobiliyatlaringiz va qiziqishlaringiz..."
+              ></textarea>
+            </div>
+
+            <div class="pt-4 flex flex-col gap-4">
+              <button
+                id="submit-btn"
+                type="submit"
+                class="bg-primary hover:bg-primary-dark w-full h-14 rounded-lg text-white font-bold text-base tracking-wide flex items-center justify-center gap-2 hover:brightness-110 active:scale-[0.98] transition-all shadow-xl shadow-primary/30 btn-primary btn-animated"
+              >
+                Arizani yuborish
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </main>
+  </div>
 </div>
 {% endblock %}

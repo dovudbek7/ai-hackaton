@@ -92,7 +92,6 @@ Ariza tavsifi:
         # Update application
         application.description_quality = description_quality
         application.decision = decision_val
-        application.status = decision_val
         application.ai_reason = reason
         application.analyzed_at = timezone.now()
         application.save()
