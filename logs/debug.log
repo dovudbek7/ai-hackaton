@@ -607,3 +607,55 @@ INFO 2026-02-03 15:57:06,070 log "GET /admin/jsi18n/ HTTP/1.1" 200 3342
 INFO 2026-02-03 15:57:06,077 log "GET /static/admin/js/change_form.js HTTP/1.1" 304 0
 INFO 2026-02-03 15:57:06,096 log "GET /static/admin/img/icon-calendar.svg HTTP/1.1" 200 1112
 INFO 2026-02-03 15:57:07,320 log "GET /admin/hackathon/region/ HTTP/1.1" 200 21500
+INFO 2026-02-03 16:02:46,725 autoreload /Users/dovudbek/Documents/hack/ai-hackaton/hackathon/models.py changed, reloading.
+INFO 2026-02-03 16:02:47,154 autoreload Watching for file changes with StatReloader
+INFO 2026-02-03 16:02:58,480 autoreload /Users/dovudbek/Documents/hack/ai-hackaton/hackathon/views.py changed, reloading.
+INFO 2026-02-03 16:02:58,874 autoreload Watching for file changes with StatReloader
+INFO 2026-02-03 16:03:23,407 autoreload /Users/dovudbek/Documents/hack/ai-hackaton/hackathon/views.py changed, reloading.
+INFO 2026-02-03 16:03:23,631 autoreload Watching for file changes with StatReloader
+INFO 2026-02-03 16:03:45,575 log "GET /register/otp/ HTTP/1.1" 200 6872
+INFO 2026-02-03 16:03:47,728 log "POST /register/otp/ HTTP/1.1" 200 7186
+INFO 2026-02-03 16:04:06,617 log "GET /register/otp/ HTTP/1.1" 200 6872
+INFO 2026-02-03 16:04:08,161 log "GET /register/ HTTP/1.1" 302 0
+INFO 2026-02-03 16:04:09,677 log "GET / HTTP/1.1" 302 0
+INFO 2026-02-03 16:04:09,690 log "GET /profile/ HTTP/1.1" 302 0
+INFO 2026-02-03 16:04:11,622 log "GET / HTTP/1.1" 302 0
+INFO 2026-02-03 16:04:11,629 log "GET /profile/ HTTP/1.1" 302 0
+INFO 2026-02-03 16:04:11,642 log "GET /register/form/ HTTP/1.1" 200 16055
+INFO 2026-02-03 16:04:13,440 log "GET / HTTP/1.1" 302 0
+INFO 2026-02-03 16:04:13,463 log "GET /profile/ HTTP/1.1" 302 0
+INFO 2026-02-03 16:04:13,474 log "GET /register/form/ HTTP/1.1" 200 16055
+INFO 2026-02-03 16:04:15,761 log "GET / HTTP/1.1" 302 0
+INFO 2026-02-03 16:04:15,767 log "GET /profile/ HTTP/1.1" 302 0
+INFO 2026-02-03 16:04:15,773 log "GET /register/form/ HTTP/1.1" 200 16055
+INFO 2026-02-03 16:04:20,236 log "GET / HTTP/1.1" 302 0
+INFO 2026-02-03 16:04:20,242 log "GET /profile/ HTTP/1.1" 302 0
+INFO 2026-02-03 16:04:20,247 log "GET /register/form/ HTTP/1.1" 200 16055
+INFO 2026-02-03 16:04:22,689 log "GET /api/schools/8/ HTTP/1.1" 200 2244
+INFO 2026-02-03 16:04:44,586 log "GET /admin/hackathon/application/ HTTP/1.1" 200 19228
+INFO 2026-02-03 16:04:44,598 log "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+INFO 2026-02-03 16:04:54,198 log "POST /register/form/ HTTP/1.1" 302 0
+INFO 2026-02-03 16:04:54,209 log "GET /profile/ HTTP/1.1" 200 9874
+INFO 2026-02-03 16:05:02,089 log "GET /admin/hackathon/application/ HTTP/1.1" 200 19228
+INFO 2026-02-03 16:05:02,106 log "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+INFO 2026-02-03 16:05:09,392 log "GET /logout/ HTTP/1.1" 302 0
+INFO 2026-02-03 16:05:09,406 log "GET /login/ HTTP/1.1" 200 9495
+INFO 2026-02-03 16:05:11,472 log "GET / HTTP/1.1" 200 13738
+INFO 2026-02-03 16:05:13,821 log "GET /login/ HTTP/1.1" 200 9495
+INFO 2026-02-03 16:05:16,073 log "GET / HTTP/1.1" 200 13738
+INFO 2026-02-03 16:05:17,901 log "GET /register/ HTTP/1.1" 200 9435
+INFO 2026-02-03 16:05:25,824 log "POST /register/ HTTP/1.1" 302 0
+INFO 2026-02-03 16:05:25,832 log "GET /register/otp/ HTTP/1.1" 200 6872
+INFO 2026-02-03 16:05:36,568 log "POST /register/otp/ HTTP/1.1" 302 0
+INFO 2026-02-03 16:05:36,575 log "GET /register/form/ HTTP/1.1" 200 16055
+INFO 2026-02-03 16:05:40,407 log "GET / HTTP/1.1" 302 0
+INFO 2026-02-03 16:05:40,413 log "GET /profile/ HTTP/1.1" 302 0
+INFO 2026-02-03 16:05:40,417 log "GET /register/form/ HTTP/1.1" 200 16055
+INFO 2026-02-03 16:05:42,441 log "GET / HTTP/1.1" 302 0
+INFO 2026-02-03 16:05:42,448 log "GET /profile/ HTTP/1.1" 302 0
+INFO 2026-02-03 16:05:42,452 log "GET /register/form/ HTTP/1.1" 200 16055
+INFO 2026-02-03 16:06:05,712 log "GET /admin/hackathon/application/ HTTP/1.1" 302 0
+INFO 2026-02-03 16:06:05,735 log "GET /admin/login/?next=/admin/hackathon/application/ HTTP/1.1" 200 4128
+INFO 2026-02-03 16:06:09,715 log "POST /admin/login/?next=/admin/hackathon/application/ HTTP/1.1" 302 0
+INFO 2026-02-03 16:06:09,724 log "GET /admin/hackathon/application/ HTTP/1.1" 200 20125
+INFO 2026-02-03 16:06:09,751 log "GET /admin/jsi18n/ HTTP/1.1" 200 3342

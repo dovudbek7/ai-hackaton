@@ -157,6 +157,11 @@ class Application(models.Model):
     def __str__(self):
         return f"{self.full_name} - {self.phone}"
     
+    @property
+    def is_submitted(self):
+        """Check if the application has been submitted (at least region is selected)"""
+        return self.region_id is not None
+
     def get_status_display_uz(self):
         """Get status in Uzbek for templates"""
         return dict(self.STATUS_CHOICES).get(self.status, self.status)
