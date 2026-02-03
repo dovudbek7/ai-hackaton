@@ -19,6 +19,14 @@ def landing_view(request):
 
 def register_view(request):
     if request.session.get('authenticated'):
+        phone = request.session.get('phone')
+        if phone:
+            try:
+                application = Application.objects.get(phone=phone)
+                if not application.is_submitted:
+                    return redirect('form')
+            except Application.DoesNotExist:
+                pass
         return redirect('profile')
 
     if request.method == 'POST':
@@ -31,6 +39,9 @@ def register_view(request):
             request.session['authenticated'] = True
             request.session['phone'] = phone
             request.session['application_id'] = application.id
+            
+            if not application.is_submitted:
+                return redirect('form')
             return redirect('profile')
 
         # Generate OTP
@@ -74,16 +85,36 @@ def otp_view(request):
             request.session.pop('otp', None)
             request.session['authenticated'] = True
             
-            # Check if it was a login
+            # Determine session phone
             otp_phone = request.session.get('otp_phone')
             if otp_phone:
-                request.session['phone'] = otp_phone
+                phone = otp_phone
+                request.session['phone'] = phone
                 request.session.pop('otp_phone', None)
                 request.session.pop('otp_created_at', None)
-                return redirect('profile')
+            else:
+                # Registration flow
+                full_name = request.session.get('full_name')
+                phone = request.session.get('phone')
+                
+                if full_name and phone:
+                    # Create Application record immediately
+                    application, created = Application.objects.update_or_create(
+                        phone=phone,
+                        defaults={'full_name': full_name}
+                    )
+                    request.session['application_id'] = application.id
             
-            # If not login, it's registration
-            return redirect('form')
+            # Final redirect check for both login and registration
+            if phone:
+                try:
+                    application = Application.objects.get(phone=phone)
+                    if not application.is_submitted:
+                        return redirect('form')
+                except Application.DoesNotExist:
+                    pass
+            
+            return redirect('profile')
         else:
             error_message = "Kod noto'g'ri, qayta urinib ko'ring"
 
@@ -104,12 +135,12 @@ def form_view(request):
     
     if request.method == 'POST':
         try:
-            # Get data from session
-            full_name = request.session.get('full_name')
-            phone = request.session.get('phone')
-            
-            if not full_name or not phone:
+            # Get application from session
+            application_id = request.session.get('application_id')
+            if not application_id:
                 return redirect('register')
+            
+            application = get_object_or_404(Application, id=application_id)
             
             # Get form data
             region_id = request.POST.get('region')
@@ -130,27 +161,23 @@ def form_view(request):
                     'error_message': region.warning_message
                 })
             
-            # Create application
-            application = Application.objects.create(
-                full_name=full_name,
-                phone=phone,
-                region=region,
-                school=school,
-                grade=grade,
-                about=about,
-                device=device,
-                english_level=english_level,
-                status='pending'  # Default status
-            )
+            # Update application
+            application.region = region
+            application.school = school
+            application.grade = grade
+            application.about = about
+            application.device = device
+            application.english_level = english_level
+            application.status = 'pending'
+            application.save()
             
-            # Clear session
-            request.session.flush()
+            # Clear session partial data but keep auth
+            request.session.pop('full_name', None)
             
-            # Save application ID to new session
-            # Save application ID to new session
+            # Save application ID to session (already there, but ensuring consistency)
             request.session['application_id'] = application.id
             request.session['authenticated'] = True
-            request.session['phone'] = phone
+            request.session['phone'] = application.phone
             
             # Trigger background AI analysis
             try:
@@ -194,16 +221,20 @@ def profile_view(request):
         request.session.flush()
         return redirect('login')
     
+    # Block profile if not submitted
+    if not application.is_submitted:
+        return redirect('form')
+    
     context = {
         'application': application,
         'full_name': application.full_name,
         'phone': application.phone,
-        'region': application.region.name,
-        'school': application.school.name,
-        'grade': application.get_grade_display(),
-        'about': application.about,
-        'device': application.get_device_display(),
-        'english_level': application.get_english_level_display(),
+        'region': application.region.name if application.region else "Belgilanmagan",
+        'school': application.school.name if application.school else "Belgilanmagan",
+        'grade': application.get_grade_display() if application.grade else "Belgilanmagan",
+        'about': application.about or "Ma'lumot berilmagan",
+        'device': application.get_device_display() if application.device else "Belgilanmagan",
+        'english_level': application.get_english_level_display() if application.english_level else "Belgilanmagan",
         'status': application.status,
     }
     
@@ -212,6 +243,14 @@ def profile_view(request):
 
 def login_view(request):
     if request.session.get('authenticated'):
+        phone = request.session.get('phone')
+        if phone:
+            try:
+                application = Application.objects.get(phone=phone)
+                if not application.is_submitted:
+                    return redirect('form')
+            except Application.DoesNotExist:
+                pass
         return redirect('profile')
 
     if request.method == 'POST':
