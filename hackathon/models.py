@@ -87,30 +87,40 @@ class Application(models.Model):
     # Educational info
     region = models.ForeignKey(
         Region, 
-        on_delete=models.PROTECT,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
         verbose_name="Hudud"
     )
     school = models.ForeignKey(
         School, 
-        on_delete=models.PROTECT,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
         verbose_name="Maktab"
     )
     grade = models.CharField(
         max_length=2, 
         choices=GRADE_CHOICES,
+        null=True,
+        blank=True,
         verbose_name="Sinf"
     )
     
     # Additional info
-    about = models.TextField(verbose_name="O'zingiz haqingizda")
+    about = models.TextField(null=True, blank=True, verbose_name="O'zingiz haqingizda")
     device = models.CharField(
         max_length=10, 
         choices=DEVICE_CHOICES,
+        null=True,
+        blank=True,
         verbose_name="Jihozingiz"
     )
     english_level = models.CharField(
         max_length=10, 
         choices=ENGLISH_LEVEL_CHOICES,
+        null=True,
+        blank=True,
         verbose_name="Ingliz tili darajasi"
     )
     

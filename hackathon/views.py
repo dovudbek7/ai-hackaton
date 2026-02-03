@@ -83,6 +83,17 @@ def otp_view(request):
                 return redirect('profile')
             
             # If not login, it's registration
+            full_name = request.session.get('full_name')
+            phone = request.session.get('phone')
+            
+            if full_name and phone:
+                # Create Application record immediately
+                application, created = Application.objects.update_or_create(
+                    phone=phone,
+                    defaults={'full_name': full_name}
+                )
+                request.session['application_id'] = application.id
+            
             return redirect('form')
         else:
             error_message = "Kod noto'g'ri, qayta urinib ko'ring"
@@ -104,12 +115,12 @@ def form_view(request):
     
     if request.method == 'POST':
         try:
-            # Get data from session
-            full_name = request.session.get('full_name')
-            phone = request.session.get('phone')
-            
-            if not full_name or not phone:
+            # Get application from session
+            application_id = request.session.get('application_id')
+            if not application_id:
                 return redirect('register')
+            
+            application = get_object_or_404(Application, id=application_id)
             
             # Get form data
             region_id = request.POST.get('region')
@@ -130,27 +141,23 @@ def form_view(request):
                     'error_message': region.warning_message
                 })
             
-            # Create application
-            application = Application.objects.create(
-                full_name=full_name,
-                phone=phone,
-                region=region,
-                school=school,
-                grade=grade,
-                about=about,
-                device=device,
-                english_level=english_level,
-                status='pending'  # Default status
-            )
+            # Update application
+            application.region = region
+            application.school = school
+            application.grade = grade
+            application.about = about
+            application.device = device
+            application.english_level = english_level
+            application.status = 'pending'
+            application.save()
             
-            # Clear session
-            request.session.flush()
+            # Clear session partial data but keep auth
+            request.session.pop('full_name', None)
             
-            # Save application ID to new session
-            # Save application ID to new session
+            # Save application ID to session (already there, but ensuring consistency)
             request.session['application_id'] = application.id
             request.session['authenticated'] = True
-            request.session['phone'] = phone
+            request.session['phone'] = application.phone
             
             # Trigger background AI analysis
             try:
@@ -198,12 +205,12 @@ def profile_view(request):
         'application': application,
         'full_name': application.full_name,
         'phone': application.phone,
-        'region': application.region.name,
-        'school': application.school.name,
-        'grade': application.get_grade_display(),
-        'about': application.about,
-        'device': application.get_device_display(),
-        'english_level': application.get_english_level_display(),
+        'region': application.region.name if application.region else "Belgilanmagan",
+        'school': application.school.name if application.school else "Belgilanmagan",
+        'grade': application.get_grade_display() if application.grade else "Belgilanmagan",
+        'about': application.about or "Ma'lumot berilmagan",
+        'device': application.get_device_display() if application.device else "Belgilanmagan",
+        'english_level': application.get_english_level_display() if application.english_level else "Belgilanmagan",
         'status': application.status,
     }
     
