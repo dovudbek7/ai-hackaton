@@ -91,10 +91,18 @@ Ariza tavsifi:
 
         # Update application
         application.description_quality = description_quality
-        application.decision = decision_val
+        application.ai_status = decision_val
         application.ai_reason = reason
         application.analyzed_at = timezone.now()
-        application.save()
+        
+        # 🛡️ ONLY save AI-specific fields to avoid touching general status
+        application.save(update_fields=[
+            'description_quality', 
+            'ai_status', 
+            'ai_reason', 
+            'analyzed_at',
+            'updated_at'
+        ])
 
         logger.info(
             f"Application {application_id} tahlil qilindi | "
