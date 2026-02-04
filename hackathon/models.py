@@ -74,10 +74,11 @@ class Application(models.Model):
         ('rejected', 'RAD ETILDI'),
     ]
     
-    DECISION_CHOICES = [
+    AI_STATUS_CHOICES = [
         ('pending', 'KUTILMOQDA'),
         ('accepted', 'QABUL QILINDI'),
         ('rejected', 'RAD ETILDI'),
+        ('needs_review', 'QAYTA KO\'RIB CHIQISH'),
     ]
     
     # Personal info
@@ -135,9 +136,9 @@ class Application(models.Model):
     # AI Analysis Fields
     computer_skill = models.BooleanField(null=True, blank=True, verbose_name="Kompyuter savodxonligi")
     english_skill = models.BooleanField(null=True, blank=True, verbose_name="Ingliz tili")
-    decision = models.CharField(
-        max_length=10,
-        choices=DECISION_CHOICES,
+    ai_status = models.CharField(
+        max_length=15,
+        choices=AI_STATUS_CHOICES,
         default='pending',
         verbose_name="AI Qarori"
     )

@@ -125,11 +125,11 @@ class ApplicationAdmin(admin.ModelAdmin):
         'region', 
         'school', 
         'status',
-        'decision',
+        'ai_status',
         'description_quality',
         'created_at'
     ]
-    list_filter = ['status', 'decision', 'description_quality', 'region', 'grade', 'english_level', 'device', 'created_at']
+    list_filter = ['status', 'ai_status', 'description_quality', 'region', 'grade', 'english_level', 'device', 'created_at']
     search_fields = ['full_name', 'phone']
     readonly_fields = ['created_at', 'updated_at', 'analyzed_at']
     list_editable = ['status']
@@ -149,7 +149,7 @@ class ApplicationAdmin(admin.ModelAdmin):
         }),
         ('AI Tahlil', {
             'fields': (
-                'decision', 
+                'ai_status', 
                 'description_quality',
                 'ai_reason', 
                 'analyzed_at'
