@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse
-from django.db import IntegrityError
+from django.db import IntegrityError, transaction
 from .models import Region, School, Application
 from django.conf import settings
 import requests
@@ -180,13 +180,17 @@ def form_view(request):
             request.session['phone'] = application.phone
             
             # Trigger background AI analysis only if form is filled
-            if application.about and len(application.about.strip()) > 10:
+            print(f"DEBUG: Application {application.id} saved. About length: {len(application.about or '')}")
+            if application.about and len(application.about.strip()) > 5:
                 try:
                     from .tasks import analyze_application
-                    analyze_application.delay(application.id)
+                    print(f"DEBUG: Sending to Celery queue... ID: {application.id}")
+                    # Use on_commit to ensure task doesn't start before DB has saved the data
+                    transaction.on_commit(lambda: analyze_application.delay(application.id))
                 except Exception as e:
-                    # Log error but don't fail the request
-                    print(f"Failed to trigger AI analysis task: {e}")
+                    print(f"DEBUG ERROR triggering Celery: {e}")
+            else:
+                print(f"DEBUG: Skipping AI analysis for app {application.id} (description too short)")
             
             return redirect('profile')
             

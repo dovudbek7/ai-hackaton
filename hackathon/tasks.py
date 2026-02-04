@@ -11,9 +11,11 @@ logger = logging.getLogger(__name__)
 
 @shared_task(bind=True, max_retries=3)
 def analyze_application(self, application_id):
+    print(f"\n--- DEBUG: Celery received task for Application {application_id} ---")
     try:
         application = Application.objects.get(id=application_id)
-        if not application.about or len(application.about.strip()) < 10:
+        if not application.about or len(application.about.strip()) < 5:
+            print(f"--- DEBUG: Skipping Application {application_id} (Too short) ---")
             logger.info(f"Application {application_id} skipped: description too short or missing.")
             return
     except Application.DoesNotExist:
