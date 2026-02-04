@@ -12,11 +12,12 @@ class Region(models.Model):
         verbose_name="Ogohlantirish xabari"
     )
     deadline = models.DateField(null=True, blank=True, verbose_name="Muddat")
+    order = models.PositiveIntegerField(default=0, verbose_name="Tartib")
     
     class Meta:
         verbose_name = "Hudud"
         verbose_name_plural = "Hududlar"
-        ordering = ['name']
+        ordering = ['order', 'name']
     
     def __str__(self):
         return self.name
@@ -31,11 +32,12 @@ class School(models.Model):
         verbose_name="Hudud"
     )
     name = models.CharField(max_length=200, verbose_name="Maktab nomi")
+    order = models.PositiveIntegerField(default=0, verbose_name="Tartib")
     
     class Meta:
         verbose_name = "Maktab"
         verbose_name_plural = "Maktablar"
-        ordering = ['region', 'name']
+        ordering = ['order', 'name']
     
     def __str__(self):
         return f"{self.name} ({self.region.name})"

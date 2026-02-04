@@ -26,29 +26,34 @@ def import_data(json_file):
     for entry in data:
         tuman_name = entry.get('Туман')
         maktab_name = entry.get('Мактаб')
+        order_val = entry.get('№')
         
-        # Skip entries that are clearly summary or total rows
-        # Based on the sample: {"№": "Андижон вилояти жами", "Туман": null, "Мактаб": 764}
+        # Skip summary rows
         if tuman_name is None:
             continue
             
-        # Skip if Maktab is a number (it means it's a subtotal for that district)
+        # Skip subtotal rows (where Maktab is a count)
         if isinstance(maktab_name, int):
             continue
 
         # Get or create the Region
         if tuman_name not in regions_cache:
-            region, created = Region.objects.get_or_create(name=tuman_name)
+            # For regions, we use the row number where they first appear as their order
+            region, created = Region.objects.get_or_create(
+                name=tuman_name,
+                defaults={'order': len(regions_cache) + 1}
+            )
             regions_cache[tuman_name] = region
             if created:
                 regions_count += 1
                 
         region = regions_cache[tuman_name]
         
-        # Create the School
+        # Create the School with the provided number (№) as order
         _, created = School.objects.get_or_create(
             region=region,
-            name=maktab_name
+            name=maktab_name,
+            defaults={'order': int(order_val) if order_val and str(order_val).isdigit() else 0}
         )
         if created:
             schools_count += 1
