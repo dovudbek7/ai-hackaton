@@ -3,6 +3,7 @@ from django.http import HttpResponse
 from openpyxl import Workbook
 from openpyxl.styles import Font, Alignment
 from .models import Region, School, Application
+from .tasks import analyze_application
 
 
 @admin.register(Region)
@@ -40,6 +41,9 @@ def export_to_excel(modeladmin, request, queryset):
         "Ingliz tili",
         "O'zingiz haqingizda",
         "Holat",
+        "AI Holati",
+        "AI Bahosi",
+        "AI Izohi",
         "Yaratilgan sana",
     ]
     
@@ -54,14 +58,17 @@ def export_to_excel(modeladmin, request, queryset):
         ws.cell(row=row_num, column=1, value=app.id)
         ws.cell(row=row_num, column=2, value=app.full_name)
         ws.cell(row=row_num, column=3, value=app.phone)
-        ws.cell(row=row_num, column=4, value=app.region.name)
-        ws.cell(row=row_num, column=5, value=app.school.name)
+        ws.cell(row=row_num, column=4, value=app.region.name if app.region else "-")
+        ws.cell(row=row_num, column=5, value=app.school.name if app.school else "-")
         ws.cell(row=row_num, column=6, value=app.get_grade_display())
         ws.cell(row=row_num, column=7, value=app.get_device_display())
         ws.cell(row=row_num, column=8, value=app.get_english_level_display())
         ws.cell(row=row_num, column=9, value=app.about)
         ws.cell(row=row_num, column=10, value=app.get_status_display())
-        ws.cell(row=row_num, column=11, value=app.created_at.strftime('%Y-%m-%d %H:%M'))
+        ws.cell(row=row_num, column=11, value=app.get_ai_status_display())
+        ws.cell(row=row_num, column=12, value=app.description_quality or "-")
+        ws.cell(row=row_num, column=13, value=app.ai_reason or "-")
+        ws.cell(row=row_num, column=14, value=app.created_at.strftime('%Y-%m-%d %H:%M'))
     
     # Auto-adjust column widths
     for column in ws.columns:
@@ -95,14 +102,20 @@ def export_to_json(modeladmin, request, queryset):
     data = []
     for app in queryset:
         data.append({
+            "id": app.id,
             "full_name": app.full_name,
             "phone": app.phone,
-            "region": app.region.name if app.region else "",
-            "school": app.school.name if app.school else "",
+            "region": app.region.name if app.region else None,
+            "school": app.school.name if app.school else None,
             "grade": app.get_grade_display(),
             "device": app.get_device_display(),
             "english_level": app.get_english_level_display(),
+            "about": app.about,
             "status": app.get_status_display(),
+            "ai_status": app.get_ai_status_display(),
+            "ai_reason": app.ai_reason,
+            "description_quality": app.description_quality,
+            "analyzed_at": app.analyzed_at.strftime('%Y-%m-%d %H:%M') if app.analyzed_at else None,
             "created_at": app.created_at.strftime('%Y-%m-%d %H:%M'),
         })
     
@@ -135,7 +148,26 @@ class ApplicationAdmin(admin.ModelAdmin):
     list_editable = ['status']
     autocomplete_fields = ['region', 'school']
     
-    actions = [export_to_excel, export_to_json]
+    def run_ai_analysis(self, request, queryset):
+        """AI tahlilini qo'lda ishga tushirish"""
+        triggered_count = 0
+        skipped_count = 0
+        for app in queryset:
+            if app.about and len(app.about.strip()) > 10:  # Minimum length check
+                analyze_application.delay(app.id)
+                triggered_count += 1
+            else:
+                skipped_count += 1
+        
+        msg = f"{triggered_count} ta ariza AI tahliliga yuborildi."
+        if skipped_count > 0:
+            msg += f" {skipped_count} ta ariza ma'lumot yetarli emasligi sababli o'tkazib yuborildi."
+        
+        self.message_user(request, msg)
+    
+    run_ai_analysis.short_description = "AI tahlilini ishga tushirish"
+    
+    actions = [export_to_excel, export_to_json, run_ai_analysis]
     
     fieldsets = (
         ('Shaxsiy ma\'lumotlar', {

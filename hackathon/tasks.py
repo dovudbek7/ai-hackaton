@@ -13,6 +13,9 @@ logger = logging.getLogger(__name__)
 def analyze_application(self, application_id):
     try:
         application = Application.objects.get(id=application_id)
+        if not application.about or len(application.about.strip()) < 10:
+            logger.info(f"Application {application_id} skipped: description too short or missing.")
+            return
     except Application.DoesNotExist:
         logger.error(f"Application {application_id} topilmadi")
         return

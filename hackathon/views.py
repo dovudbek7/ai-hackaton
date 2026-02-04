@@ -179,13 +179,14 @@ def form_view(request):
             request.session['authenticated'] = True
             request.session['phone'] = application.phone
             
-            # Trigger background AI analysis
-            try:
-                from .tasks import analyze_application
-                analyze_application.delay(application.id)
-            except Exception as e:
-                # Log error but don't fail the request
-                print(f"Failed to trigger AI analysis task: {e}")
+            # Trigger background AI analysis only if form is filled
+            if application.about and len(application.about.strip()) > 10:
+                try:
+                    from .tasks import analyze_application
+                    analyze_application.delay(application.id)
+                except Exception as e:
+                    # Log error but don't fail the request
+                    print(f"Failed to trigger AI analysis task: {e}")
             
             return redirect('profile')
             
