@@ -1175,3 +1175,23 @@ INFO 2026-02-04 12:48:49,167 autoreload /Users/dovudbek/Documents/hack/ai-hackat
 INFO 2026-02-04 12:48:49,583 autoreload Watching for file changes with StatReloader
 INFO 2026-02-04 12:49:26,830 log "GET /admin/hackathon/school/ HTTP/1.1" 200 51612
 INFO 2026-02-04 12:49:26,842 log "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+INFO 2026-02-04 12:56:05,599 autoreload /Users/dovudbek/Documents/hack/ai-hackaton/hackathon/models.py changed, reloading.
+INFO 2026-02-04 12:56:06,003 autoreload Watching for file changes with StatReloader
+INFO 2026-02-04 12:56:07,132 autoreload /Users/dovudbek/Documents/hack/ai-hackaton/hackathon/models.py changed, reloading.
+INFO 2026-02-04 12:56:07,338 autoreload Watching for file changes with StatReloader
+INFO 2026-02-04 12:56:49,945 log "GET /admin/hackathon/school/ HTTP/1.1" 200 52106
+INFO 2026-02-04 12:56:49,955 log "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+INFO 2026-02-04 12:56:51,083 log "GET /admin/hackathon/school/ HTTP/1.1" 200 52106
+INFO 2026-02-04 12:56:51,093 log "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+INFO 2026-02-04 12:58:18,294 log "GET /admin/hackathon/school/ HTTP/1.1" 200 9815
+INFO 2026-02-04 12:58:18,309 log "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+INFO 2026-02-04 12:58:18,966 log "GET /admin/hackathon/school/ HTTP/1.1" 200 9815
+INFO 2026-02-04 12:58:18,980 log "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+INFO 2026-02-04 12:58:36,143 log "GET /admin/hackathon/school/ HTTP/1.1" 200 9815
+INFO 2026-02-04 12:58:36,163 log "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+INFO 2026-02-04 12:59:17,845 autoreload /Users/dovudbek/Documents/hack/ai-hackaton/hackathon/models.py changed, reloading.
+INFO 2026-02-04 12:59:18,092 autoreload Watching for file changes with StatReloader
+INFO 2026-02-04 12:59:29,883 log "GET /admin/hackathon/school/ HTTP/1.1" 200 51629
+INFO 2026-02-04 12:59:29,895 log "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+INFO 2026-02-04 12:59:33,103 log "GET /admin/hackathon/region/ HTTP/1.1" 200 21493
+INFO 2026-02-04 12:59:33,116 log "GET /admin/jsi18n/ HTTP/1.1" 200 3342
