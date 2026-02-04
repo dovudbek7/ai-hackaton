@@ -1,3 +1,6 @@
+sites-enabled/
+staticfiles/
+
 .env
 __pycache__/
 *.pyc
