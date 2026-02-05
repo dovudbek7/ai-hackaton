@@ -2,6 +2,7 @@ from django.contrib import admin
 from django.http import HttpResponse
 from openpyxl import Workbook
 from openpyxl.styles import Font, Alignment
+from django.db.models import Count
 from .models import Region, School, Application
 from .tasks import analyze_application
 
@@ -14,12 +15,81 @@ class RegionAdmin(admin.ModelAdmin):
     list_editable = ['is_open']
 
 
+def export_school_stats_xls(modeladmin, request, queryset):
+    """Tanlangan maktablar bo'yicha statistikani Excelga yuklash"""
+    # Create workbook
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Maktab Statistikasi"
+    
+    # Headers
+    headers = ["Hudud", "Maktab", "Arizalar soni"]
+    for col_num, header in enumerate(headers, 1):
+        cell = ws.cell(row=1, column=col_num, value=header)
+        cell.font = Font(bold=True)
+        cell.alignment = Alignment(horizontal='center')
+    
+    # Annotate queryset with application count
+    # We need to import Application here or use related_name if available.
+    # School has related_name='schools' from Region, but for Application it is 'application_set' by default directly,
+    # or actually in the Application model: school = models.ForeignKey(..., related_name='applications')?
+    # Checking Application model: school = models.ForeignKey(..., related_name='applications' is NOT set, so default is application_set)
+    # Actually, let's check models.py content again to be sure about related_name if any.
+    # Application model: school = models.ForeignKey(School, ..., related_name='application_set' (default))
+    # Wait, looking at previous file view of models.py (Step 27):
+    # school = models.ForeignKey(School, ... verbose_name="Maktab")
+    # So related name is default 'application_set'
+    
+    schools_with_counts = queryset.annotate(
+        app_count=Count('application')
+    ).order_by('region__name', 'name')
+    
+    # Write data
+    for row_num, school in enumerate(schools_with_counts, 2):
+        ws.cell(row=row_num, column=1, value=school.region.name)
+        ws.cell(row=row_num, column=2, value=school.name)
+        ws.cell(row=row_num, column=3, value=school.app_count)
+    
+    # Auto-adjust column widths
+    for column in ws.columns:
+        max_length = 0
+        column_letter = column[0].column_letter
+        for cell in column:
+            try:
+                if len(str(cell.value)) > max_length:
+                    max_length = len(str(cell.value))
+            except:
+                pass
+        adjusted_width = min(max_length + 2, 50)
+        ws.column_dimensions[column_letter].width = adjusted_width
+
+    # Create response
+    response = HttpResponse(
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    response['Content-Disposition'] = 'attachment; filename=maktab_statistikasi.xlsx'
+    wb.save(response)
+    return response
+
+export_school_stats_xls.short_description = "Statistikani Excelga yuklash"
+
+
 @admin.register(School)
 class SchoolAdmin(admin.ModelAdmin):
-    list_display = ['name', 'region']
+    list_display = ['name', 'region', 'get_app_count']
     list_filter = ['region']
     search_fields = ['name']
     autocomplete_fields = ['region']
+    actions = [export_school_stats_xls]
+    
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        return qs.annotate(app_count=Count('application'))
+    
+    def get_app_count(self, obj):
+        return obj.app_count
+    get_app_count.short_description = "Arizalar soni"
+    get_app_count.admin_order_field = 'app_count'
 
 
 def export_to_excel(modeladmin, request, queryset):
@@ -83,6 +153,44 @@ def export_to_excel(modeladmin, request, queryset):
         adjusted_width = min(max_length + 2, 50)
         ws.column_dimensions[column_letter].width = adjusted_width
     
+    # Create a new sheet for statistics
+    stats_ws = wb.create_sheet(title="Statistika")
+    
+    # Headers for stats
+    stats_headers = ["Hudud", "Maktab", "Ishtirokchilar soni"]
+    for col_num, header in enumerate(stats_headers, 1):
+        cell = stats_ws.cell(row=1, column=col_num, value=header)
+        cell.font = Font(bold=True)
+        cell.alignment = Alignment(horizontal='center')
+    
+    # Aggregate statistics from the queryset
+    # We group by region name and school name and count
+    stats_data = queryset.values(
+        'region__name', 
+        'school__name'
+    ).annotate(
+        count=Count('id')
+    ).order_by('region__name', 'school__name')
+    
+    # Write stats data
+    for row_num, entry in enumerate(stats_data, 2):
+        stats_ws.cell(row=row_num, column=1, value=entry['region__name'] or "-")
+        stats_ws.cell(row=row_num, column=2, value=entry['school__name'] or "-")
+        stats_ws.cell(row=row_num, column=3, value=entry['count'])
+    
+    # Auto-adjust column widths for stats sheet
+    for column in stats_ws.columns:
+        max_length = 0
+        column_letter = column[0].column_letter
+        for cell in column:
+            try:
+                if len(str(cell.value)) > max_length:
+                    max_length = len(str(cell.value))
+            except:
+                pass
+        adjusted_width = min(max_length + 2, 50)
+        stats_ws.column_dimensions[column_letter].width = adjusted_width
+
     # Create response
     response = HttpResponse(
         content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
