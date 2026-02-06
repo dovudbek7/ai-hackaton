@@ -4,8 +4,9 @@ from django.db import IntegrityError, transaction
 from .models import Region, School, Application
 from django.conf import settings
 import requests
-from .utils import generate_otp, send_sms
+from .utils import generate_otp, send_sms, get_client_ip
 from datetime import datetime
+from django.core.cache import cache
 
 
 ESKIZ_AUTH_URL = "https://notify.eskiz.uz/api/auth/login"
@@ -32,6 +33,25 @@ def register_view(request):
     if request.method == 'POST':
         full_name = request.POST.get('full_name')
         phone = request.POST.get('phone')
+
+        # Check verification limit (Phone)
+        limit_key = f"sms_limit_{phone}"
+        attempts = cache.get(limit_key, 0)
+        
+        if attempts >= 3:
+             return render(request, 'hackathon/register.html', {
+                'error_message': "Ushbu raqamdan juda ko'p urinishlar amalga oshirildi. Iltimos 1 soatdan keyin urinib ko'ring"
+            })
+
+        # Check verification limit (IP)
+        client_ip = get_client_ip(request)
+        ip_limit_key = f"sms_ip_limit_{client_ip}"
+        ip_attempts = cache.get(ip_limit_key, 0)
+
+        if ip_attempts >= 10:
+             return render(request, 'hackathon/register.html', {
+                'error_message': "Sizning qurilmangizdan juda ko'p so'rovlar yuborildi. Iltimos 1 soatdan keyin urinib ko'ring"
+            })
 
         # Existing user → auto login
         if Application.objects.filter(phone=phone).exists():
@@ -61,6 +81,18 @@ def register_view(request):
         # Send SMS
         try:
             send_sms(phone, message)
+
+            # Increment attempts counter (Phone)
+            if attempts == 0:
+                cache.set(limit_key, 1, timeout=3600)  # Set for 1 hour
+            else:
+                cache.incr(limit_key)  # Increment existing counter
+            
+            # Increment attempts counter (IP)
+            if ip_attempts == 0:
+                cache.set(ip_limit_key, 1, timeout=3600)
+            else:
+                cache.incr(ip_limit_key)
         except Exception as e:
             return render(request, 'hackathon/register.html', {
                 'error_message': "SMS yuborishda xatolik yuz berdi"
@@ -271,6 +303,25 @@ def login_view(request):
     if request.method == 'POST':
         phone = request.POST.get('phone')
 
+        # Check verification limit
+        limit_key = f"sms_limit_{phone}"
+        attempts = cache.get(limit_key, 0)
+        
+        if attempts >= 3:
+             return render(request, 'hackathon/login.html', {
+                'error_message': "Ushbu raqamdan juda ko'p urinishlar amalga oshirildi. Iltimos 1 soatdan keyin urinib ko'ring"
+            })
+
+        # Check verification limit (IP)
+        client_ip = get_client_ip(request)
+        ip_limit_key = f"sms_ip_limit_{client_ip}"
+        ip_attempts = cache.get(ip_limit_key, 0)
+
+        if ip_attempts >= 10:
+             return render(request, 'hackathon/login.html', {
+                'error_message': "Sizning qurilmangizdan juda ko'p so'rovlar yuborildi. Iltimos 1 soatdan keyin urinib ko'ring"
+            })
+
         try:
             application = Application.objects.get(phone=phone)
 
@@ -291,6 +342,18 @@ def login_view(request):
 
             try:
                 send_sms(phone, message)
+
+                # Increment attempts counter (Phone)
+                if attempts == 0:
+                    cache.set(limit_key, 1, timeout=3600)  # Set for 1 hour
+                else:
+                    cache.incr(limit_key)  # Increment existing counter
+                
+                # Increment attempts counter (IP)
+                if ip_attempts == 0:
+                    cache.set(ip_limit_key, 1, timeout=3600)
+                else:
+                    cache.incr(ip_limit_key)
             except Exception:
                 return render(request, 'hackathon/login.html', {
                     'error_message': "SMS yuborishda xatolik yuz berdi",
