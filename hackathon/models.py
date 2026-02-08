@@ -149,6 +149,7 @@ class Application(models.Model):
     analyzed_at = models.DateTimeField(null=True, blank=True, verbose_name="Tahlil vaqti")
     
     # Timestamps
+    telegram_user_id = models.BigIntegerField(null=True, blank=True, verbose_name="Telegram ID")
     created_at = models.DateTimeField(default=timezone.now, verbose_name="Yaratilgan sana")
     updated_at = models.DateTimeField(auto_now=True, verbose_name="Yangilangan sana")
     
@@ -168,3 +169,50 @@ class Application(models.Model):
     def get_status_display_uz(self):
         """Get status in Uzbek for templates"""
         return dict(self.STATUS_CHOICES).get(self.status, self.status)
+
+
+class BotUser(models.Model):
+    """Telegram bot foydalanuvchilarini kuzatish"""
+    telegram_id = models.BigIntegerField(unique=True, verbose_name="Telegram ID")
+    username = models.CharField(max_length=100, null=True, blank=True, verbose_name="Foydalanuvchi nomi")
+    claimed_phone = models.CharField(max_length=20, null=True, blank=True, verbose_name="Band qilingan raqam")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Bot foydalanuvchisi"
+        verbose_name_plural = "Bot foydalanuvchilari"
+
+    def __str__(self):
+        return f"{self.telegram_id} - {self.claimed_phone}"
+
+
+class ApplicationStatusAudit(models.Model):
+    """Immutable audit log for application status changes"""
+    application = models.ForeignKey(
+        Application,
+        on_delete=models.CASCADE,
+        related_name='status_audits',
+        verbose_name="Ariza"
+    )
+    previous_status = models.CharField(max_length=10, verbose_name="Oldingi holat")
+    new_status = models.CharField(max_length=10, verbose_name="Yangi holat")
+    admin_user = models.ForeignKey(
+        'auth.User',
+        on_delete=models.SET_NULL,
+        null=True,
+        verbose_name="Admin foydalanuvchi"
+    )
+    action_type = models.CharField(
+        max_length=50,
+        default='bulk_status_update',
+        verbose_name="Amal turi"
+    )
+    timestamp = models.DateTimeField(auto_now_add=True, verbose_name="Vaqt")
+    
+    class Meta:
+        verbose_name = "Holat o'zgarish tarixi"
+        verbose_name_plural = "Holat o'zgarish tarixlari"
+        ordering = ['-timestamp']
+    
+    def __str__(self):
+        return f"{self.application.full_name}: {self.previous_status} → {self.new_status}"

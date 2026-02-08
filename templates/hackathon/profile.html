@@ -28,41 +28,49 @@
 
     <main class="flex-1 flex flex-col items-center p-6">
 
-        <!-- Status Banners -->
-        {% if status == 'accepted' %}
-        <div
-            class="w-full bg-green-500/10 border-b border-green-500/20 py-6 px-6 md:px-10 mb-8 rounded-lg animate-fade-in status-banner-enter status-accepted-glow">
-            <div class="max-w-[960px] mx-auto">
-                <h2 class="text-green-500 text-xl font-bold flex items-center gap-2 mb-4">
-                    <span class="material-symbols-outlined text-2xl">celebration</span>
-                    Tabriklaymiz! Siz qabul qilindingiz 🎉
-                </h2>
-                <p class="text-green-600/80 text-sm">Siz AI Hackaton ishtirokchisi sifatida tasdiqlangan.</p>
-            </div>
-        </div>
-        {% elif status == 'rejected' %}
-        <div
-            class="w-full bg-red-500/10 border-b border-red-500/20 py-4 px-6 md:px-10 mb-8 rounded-lg animate-fade-in status-banner-enter">
-            <div class="max-w-[960px] mx-auto">
-                <h2 class="text-red-500 text-lg font-bold flex items-center gap-2">
-                    <span class="material-symbols-outlined">cancel</span>
-                    Afsuski, siz tanlovdan o'ta olmadingiz
-                </h2>
-                <p class="text-red-400 mt-1">Keyingi safar albatta urinib ko'ring.</p>
-            </div>
-        </div>
-        {% else %}
-        <div
-            class="w-full bg-yellow-500/10 border-b border-yellow-500/20 py-4 px-6 md:px-10 mb-8 rounded-lg animate-fade-in status-banner-enter">
-            <div class="max-w-[960px] mx-auto flex items-center gap-2">
-                <span class="material-symbols-outlined text-yellow-500">hourglass_empty</span>
-                <div>
-                    <h2 class="text-yellow-500 text-lg font-bold">Arizangiz ko'rib chiqilmoqda</h2>
-                    <p class="text-yellow-500/60 text-xs">Iltimos, javobni kuting. Natija tez orada e'lon qilinadi.</p>
+        <div class="w-full mb-8 animate-fade-in status-banner-enter">
+            <div
+                class="max-w-[960px] mx-auto rounded-xl border border-yellow-500/20 bg-gradient-to-r from-yellow-500/10 to-yellow-400/5 px-5 py-5 md:px-8 md:py-6">
+                <div class="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
+
+                    <!-- LEFT CONTENT -->
+                    <div class="flex items-start gap-4">
+                        <div class="flex-shrink-0">
+                            <span class="material-symbols-outlined text-yellow-500 text-[32px] md:text-[36px]">
+                                hourglass_empty
+                            </span>
+                        </div>
+
+                        <div>
+                            <h2 class="text-yellow-500 font-bold text-lg md:text-xl leading-tight">
+                                Arizangiz ko‘rib chiqilmoqda
+                            </h2>
+
+                            <p class="text-yellow-500/60 text-xs md:text-sm mt-1">
+                                Natijalarni faqat Telegram bot orqali ko'rishingiz mumkin.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- RIGHT CTA -->
+                    <div class="flex flex-col sm:flex-row gap-3 sm:items-center">
+                        <a href="https://t.me/andijon_hackaton_bot" target="_blank" rel="noopener noreferrer"
+                            class="group inline-flex items-center justify-center gap-2 rounded-lg bg-yellow-500 px-5 py-3 text-sm md:text-base font-semibold text-black shadow-md transition hover:bg-yellow-400 hover:shadow-lg">
+                            <span class="material-symbols-outlined text-[20px] group-hover:translate-x-0.5 transition">
+                                send
+                            </span>
+                            Natijani botda ko‘rish
+                        </a>
+
+                        <span class="text-yellow-500/60 text-xs md:text-sm text-center sm:text-left">
+                            @andijon_hackaton_bot
+                        </span>
+                    </div>
+
                 </div>
             </div>
         </div>
-        {% endif %}
+
 
         <div class="w-full max-w-[960px] flex flex-col gap-6">
             <!-- Profile Info Card -->
@@ -77,22 +85,6 @@
                         <h2 class="text-2xl font-bold text-slate-900 dark:text-white">{{ full_name }}</h2>
                         <p class="text-slate-500 dark:text-white/60 text-sm mt-1">{{ phone }}</p>
                         <p class="text-slate-500 dark:text-white/60 text-sm">{{ region }}</p>
-                        <div class="flex gap-2 mt-3">
-                            <span
-                                class="px-2 py-1 bg-primary/10 text-primary rounded text-xs font-bold uppercase tracking-wider">Ishtirokchi</span>
-                            {% if status == 'accepted' %}
-                            <span
-                                class="px-2 py-1 bg-green-500/10 text-green-500 rounded text-xs font-bold uppercase tracking-wider">Qabul
-                                qilindi</span>
-                            {% elif status == 'rejected' %}
-                            <span
-                                class="px-2 py-1 bg-red-500/10 text-red-500 rounded text-xs font-bold uppercase tracking-wider">Rad
-                                etildi</span>
-                            {% else %}
-                            <span
-                                class="px-2 py-1 bg-yellow-500/10 text-yellow-500 rounded text-xs font-bold uppercase tracking-wider">Kutilmoqda</span>
-                            {% endif %}
-                        </div>
                     </div>
                 </div>
 

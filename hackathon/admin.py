@@ -3,7 +3,7 @@ from django.http import HttpResponse
 from openpyxl import Workbook
 from openpyxl.styles import Font, Alignment
 from django.db.models import Count
-from .models import Region, School, Application
+from .models import Region, School, Application, BotUser, ApplicationStatusAudit
 from .tasks import analyze_application
 
 
@@ -237,6 +237,99 @@ def export_to_json(modeladmin, request, queryset):
 export_to_json.short_description = "JSON faylga yuklab olish"
 
 
+def bulk_set_status_approved(modeladmin, request, queryset):
+    """Bulk action: Set status to approved with audit logging"""
+    from django.db import transaction
+    
+    updated_count = 0
+    
+    try:
+        with transaction.atomic():
+            for app in queryset:
+                previous_status = app.status
+                if previous_status != 'accepted':
+                    app.status = 'accepted'
+                    app.save()
+                    
+                    # Create audit log
+                    ApplicationStatusAudit.objects.create(
+                        application=app,
+                        previous_status=previous_status,
+                        new_status='accepted',
+                        admin_user=request.user,
+                        action_type='bulk_status_update'
+                    )
+                    updated_count += 1
+        
+        modeladmin.message_user(request, f"{updated_count} ta ariza QABUL QILINDI holatiga o'zgartirildi.")
+    except Exception as e:
+        modeladmin.message_user(request, f"Xato: {str(e)}", level='ERROR')
+
+bulk_set_status_approved.short_description = "Tanlanganlarga holat: QABUL QILINDI"
+
+
+def bulk_set_status_rejected(modeladmin, request, queryset):
+    """Bulk action: Set status to rejected with audit logging"""
+    from django.db import transaction
+    
+    updated_count = 0
+    
+    try:
+        with transaction.atomic():
+            for app in queryset:
+                previous_status = app.status
+                if previous_status != 'rejected':
+                    app.status = 'rejected'
+                    app.save()
+                    
+                    # Create audit log
+                    ApplicationStatusAudit.objects.create(
+                        application=app,
+                        previous_status=previous_status,
+                        new_status='rejected',
+                        admin_user=request.user,
+                        action_type='bulk_status_update'
+                    )
+                    updated_count += 1
+        
+        modeladmin.message_user(request, f"{updated_count} ta ariza RAD ETILDI holatiga o'zgartirildi.")
+    except Exception as e:
+        modeladmin.message_user(request, f"Xato: {str(e)}", level='ERROR')
+
+bulk_set_status_rejected.short_description = "Tanlanganlarga holat: RAD ETILDI"
+
+
+def bulk_set_status_pending(modeladmin, request, queryset):
+    """Bulk action: Set status to pending with audit logging"""
+    from django.db import transaction
+    
+    updated_count = 0
+    
+    try:
+        with transaction.atomic():
+            for app in queryset:
+                previous_status = app.status
+                if previous_status != 'pending':
+                    app.status = 'pending'
+                    app.save()
+                    
+                    # Create audit log
+                    ApplicationStatusAudit.objects.create(
+                        application=app,
+                        previous_status=previous_status,
+                        new_status='pending',
+                        admin_user=request.user,
+                        action_type='bulk_status_update'
+                    )
+                    updated_count += 1
+        
+        modeladmin.message_user(request, f"{updated_count} ta ariza KUTILMOQDA holatiga o'zgartirildi.")
+    except Exception as e:
+        modeladmin.message_user(request, f"Xato: {str(e)}", level='ERROR')
+
+bulk_set_status_pending.short_description = "Tanlanganlarga holat: KUTILMOQDA"
+
+
 @admin.register(Application)
 class ApplicationAdmin(admin.ModelAdmin):
     list_display = [
@@ -275,7 +368,14 @@ class ApplicationAdmin(admin.ModelAdmin):
     
     run_ai_analysis.short_description = "AI tahlilini ishga tushirish"
     
-    actions = [export_to_excel, export_to_json, run_ai_analysis]
+    actions = [
+        export_to_excel, 
+        export_to_json, 
+        run_ai_analysis,
+        bulk_set_status_approved,
+        bulk_set_status_rejected,
+        bulk_set_status_pending
+    ]
     
     fieldsets = (
         ('Shaxsiy ma\'lumotlar', {
@@ -302,3 +402,94 @@ class ApplicationAdmin(admin.ModelAdmin):
             'fields': ('created_at', 'updated_at'),
         }),
     )
+
+
+@admin.register(BotUser)
+class BotUserAdmin(admin.ModelAdmin):
+    # Admin panelda ko‘rinadigan ustunlar
+    list_display = (
+        'telegram_id',
+        'claimed_phone',
+        'created_at',
+    )
+
+    # Qidiruv
+    search_fields = (
+        'telegram_id',
+        'claimed_phone',
+    )
+
+    # Filtrlash
+    list_filter = (
+        'created_at',
+    )
+
+    # Tartiblash (eng yangisi yuqorida)
+    ordering = ('-created_at',)
+
+    # O‘qish rejimi (o‘zgartirilmasin)
+    readonly_fields = (
+        'telegram_id',
+        'created_at',
+    )
+
+    # Sahifalash
+    list_per_page = 25
+
+    # Form layout
+    fieldsets = (
+        ('Telegram maʼlumotlari', {
+            'fields': ('telegram_id',),
+        }),
+        ('Bog‘langan telefon', {
+            'fields': ('claimed_phone',),
+        }),
+        ('Vaqt maʼlumotlari', {
+            'fields': ('created_at',),
+        }),
+    )
+
+@admin.register(ApplicationStatusAudit)
+class ApplicationStatusAuditAdmin(admin.ModelAdmin):
+    list_display = (
+        'application',
+        'previous_status',
+        'new_status',
+        'admin_user',
+        'action_type',
+        'timestamp'
+    )
+    
+    list_filter = (
+        'action_type',
+        'previous_status',
+        'new_status',
+        'timestamp'
+    )
+    
+    search_fields = (
+        'application__full_name',
+        'application__phone',
+        'admin_user__username'
+    )
+    
+    readonly_fields = (
+        'application',
+        'previous_status',
+        'new_status',
+        'admin_user',
+        'action_type',
+        'timestamp'
+    )
+    
+    ordering = ('-timestamp',)
+    
+    # Prevent any modifications - immutable audit log
+    def has_add_permission(self, request):
+        return False
+    
+    def has_change_permission(self, request, obj=None):
+        return False
+    
+    def has_delete_permission(self, request, obj=None):
+        return False
