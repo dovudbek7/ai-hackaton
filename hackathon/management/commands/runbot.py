@@ -32,7 +32,10 @@ logger = logging.getLogger(__name__)
 
 # Required Channels
 REQUIRED_CHANNELS = [
-    "@kaizen_md",
+    "@robocode_andijan",
+    "@andijan_it_community",
+    "@tuaf_edu",
+    "@aiHackaton"
 ]
 
 @sync_to_async
