@@ -64,41 +64,32 @@ def register_view(request):
                 return redirect('form')
             return redirect('profile')
 
-        # # Generate OTP
-        otp = generate_otp()
-
-        # Save to session
-        request.session['otp'] = otp
+        # --- OTP Logic Commented Out ---
+        # otp = generate_otp()
+        # request.session['otp'] = otp
         request.session['full_name'] = full_name
         request.session['phone'] = phone
 
-        # # SMS text
-        message = (
-            f"Kodni hech kimga bermang! "
-            f"Andijon Ai hackaton ga kirish uchun tasdiqlash kodi: {otp}"
-        )
-
-        # Send SMS
-        try:
-            send_sms(phone, message)
-
-            # Increment attempts counter (Phone)
-            if attempts == 0:
-                cache.set(limit_key, 1, timeout=3600)  # Set for 1 hour
-            else:
-                cache.incr(limit_key)  # Increment existing counter
-            
-            # Increment attempts counter (IP)
-            if ip_attempts == 0:
-                cache.set(ip_limit_key, 1, timeout=3600)
-            else:
-                cache.incr(ip_limit_key)
-        except Exception as e:
-            return render(request, 'hackathon/register.html', {
-                'error_message': "SMS yuborishda xatolik yuz berdi"
-            })
-
-        return redirect('otp')
+        # message = (
+        #     f"Kodni hech kimga bermang! "
+        #     f"Andijon Ai hackaton ga kirish uchun tasdiqlash kodi: {otp}"
+        # )
+        # try:
+        #     send_sms(phone, message)
+        #     if attempts == 0:
+        #         cache.set(limit_key, 1, timeout=3600)
+        #     else:
+        #         cache.incr(limit_key)
+        #     if ip_attempts == 0:
+        #         cache.set(ip_limit_key, 1, timeout=3600)
+        #     else:
+        #         cache.incr(ip_limit_key)
+        # except Exception as e:
+        #     return render(request, 'hackathon/register.html', {
+        #         'error_message': "SMS yuborishda xatolik yuz berdi"
+        #     })
+        # return redirect('otp')
+        # --- End OTP ---
 
         # Direct registration without SMS verification
         request.session['authenticated'] = True
@@ -325,42 +316,34 @@ def login_view(request):
         try:
             application = Application.objects.get(phone=phone)
 
-            # Generate OTP
-            otp = generate_otp()
-
-            # Save OTP info in session
-            request.session['otp'] = otp
-            request.session['otp_phone'] = phone
-            request.session['otp_created_at'] = datetime.now().isoformat()
+            # --- OTP Logic Commented Out ---
+            # otp = generate_otp()
+            # request.session['otp'] = otp
+            # request.session['otp_phone'] = phone
+            # request.session['otp_created_at'] = datetime.now().isoformat()
             request.session['application_id'] = application.id
 
-            # SMS text
-            message = (
-                f"Kodni hech kimga bermang! "
-                f"Andijon Ai hackaton ga kirish uchun tasdiqlash kodi: {otp}"
-            )
-
-            try:
-                send_sms(phone, message)
-
-                # Increment attempts counter (Phone)
-                if attempts == 0:
-                    cache.set(limit_key, 1, timeout=3600)  # Set for 1 hour
-                else:
-                    cache.incr(limit_key)  # Increment existing counter
-                
-                # Increment attempts counter (IP)
-                if ip_attempts == 0:
-                    cache.set(ip_limit_key, 1, timeout=3600)
-                else:
-                    cache.incr(ip_limit_key)
-            except Exception:
-                return render(request, 'hackathon/login.html', {
-                    'error_message': "SMS yuborishda xatolik yuz berdi",
-                    'phone': phone
-                })
-
-            return redirect('otp')
+            # message = (
+            #     f"Kodni hech kimga bermang! "
+            #     f"Andijon Ai hackaton ga kirish uchun tasdiqlash kodi: {otp}"
+            # )
+            # try:
+            #     send_sms(phone, message)
+            #     if attempts == 0:
+            #         cache.set(limit_key, 1, timeout=3600)
+            #     else:
+            #         cache.incr(limit_key)
+            #     if ip_attempts == 0:
+            #         cache.set(ip_limit_key, 1, timeout=3600)
+            #     else:
+            #         cache.incr(ip_limit_key)
+            # except Exception:
+            #     return render(request, 'hackathon/login.html', {
+            #         'error_message': "SMS yuborishda xatolik yuz berdi",
+            #         'phone': phone
+            #     })
+            # return redirect('otp')
+            # --- End OTP ---
 
             # Direct login without SMS verification
             request.session['authenticated'] = True
