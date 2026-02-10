@@ -75,7 +75,8 @@ AI Hackaton{% endblock %} {% block content %}
                   <option value="">Tanlang...</option>
                   {% for region in regions %}
                   {% if region.name|slice:":1" in "АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЭЮЯабвгдеёжзийклмнопрстуфхцчшщэюя" %}
-                  <option value="{{ region.id }}">
+                  <option value="{{ region.id }}" data-open="{{ region.is_open }}"
+                    data-warning="{{ region.warning_message }}">
                     {{ region.name }}
                   </option>
                   {% endif %}
