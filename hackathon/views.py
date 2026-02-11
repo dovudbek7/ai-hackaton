@@ -65,53 +65,30 @@ def register_view(request):
                 'error_message': "Sizning qurilmangizdan juda ko'p so'rovlar yuborildi. Iltimos 1 soatdan keyin urinib ko'ring"
             })
 
-        # Existing user → auto login
-        if Application.objects.filter(phone=phone).exists():
-            application = Application.objects.get(phone=phone)
-            request.session['authenticated'] = True
-            request.session['phone'] = phone
-            request.session['application_id'] = application.id
-            
-            if not application.is_submitted:
-                return redirect('form')
-            return redirect('profile')
-
-        # --- OTP Logic Commented Out ---
-        # otp = generate_otp()
-        # request.session['otp'] = otp
+        otp = generate_otp()
+        request.session['otp'] = otp
         request.session['full_name'] = full_name
         request.session['phone'] = phone
 
-        # message = (
-        #     f"Kodni hech kimga bermang! "
-        #     f"Andijon Ai hackaton ga kirish uchun tasdiqlash kodi: {otp}"
-        # )
-        # try:
-        #     send_sms(phone, message)
-        #     if attempts == 0:
-        #         cache.set(limit_key, 1, timeout=3600)
-        #     else:
-        #         cache.incr(limit_key)
-        #     if ip_attempts == 0:
-        #         cache.set(ip_limit_key, 1, timeout=3600)
-        #     else:
-        #         cache.incr(ip_limit_key)
-        # except Exception as e:
-        #     return render(request, 'hackathon/register.html', {
-        #         'error_message': "SMS yuborishda xatolik yuz berdi"
-        #     })
-        # return redirect('otp')
-        # --- End OTP ---
-
-        # Direct registration without SMS verification
-        request.session['authenticated'] = True
-        application, created = Application.objects.update_or_create(
-            phone=phone,
-            defaults={'full_name': full_name}
+        message = (
+            f"Kodni hech kimga bermang! "
+            f"Andijon Ai hackaton ga kirish uchun tasdiqlash kodi: {otp}"
         )
-        request.session['application_id'] = application.id
-
-        return redirect('form')
+        try:
+            send_sms(phone, message)
+            if attempts == 0:
+                cache.set(limit_key, 1, timeout=3600)
+            else:
+                cache.incr(limit_key)
+            if ip_attempts == 0:
+                cache.set(ip_limit_key, 1, timeout=3600)
+            else:
+                cache.incr(ip_limit_key)
+        except Exception:
+            return render(request, 'hackathon/register.html', {
+                'error_message': "SMS yuborishda xatolik yuz berdi"
+            })
+        return redirect('otp')
 
     return render(request, 'hackathon/register.html')
 
@@ -290,6 +267,7 @@ def profile_view(request):
         'test': application.student_tests.first(),
         'can_access_test': False,
         'student_result_text': "Natija kutilmoqda",
+        'show_waiting_banner': True,
     }
 
     if application.status in ['accepted', 'approved']:
@@ -299,6 +277,9 @@ def profile_view(request):
         context['can_access_test'] = bool(test_control)
 
     test = context['test']
+    if context['can_access_test'] and (not test or not test.is_submitted):
+        context['show_waiting_banner'] = False
+
     if test and test.is_submitted:
         if test.ai_holat == StudentTest.AI_HOLAT_QABUL_QILINDI:
             context['student_result_text'] = "Qabul qilindi"
@@ -519,42 +500,32 @@ def login_view(request):
         try:
             application = Application.objects.get(phone=phone)
 
-            # --- OTP Logic Commented Out ---
-            # otp = generate_otp()
-            # request.session['otp'] = otp
-            # request.session['otp_phone'] = phone
-            # request.session['otp_created_at'] = datetime.now().isoformat()
+            otp = generate_otp()
+            request.session['otp'] = otp
+            request.session['otp_phone'] = phone
+            request.session['otp_created_at'] = datetime.now().isoformat()
             request.session['application_id'] = application.id
 
-            # message = (
-            #     f"Kodni hech kimga bermang! "
-            #     f"Andijon Ai hackaton ga kirish uchun tasdiqlash kodi: {otp}"
-            # )
-            # try:
-            #     send_sms(phone, message)
-            #     if attempts == 0:
-            #         cache.set(limit_key, 1, timeout=3600)
-            #     else:
-            #         cache.incr(limit_key)
-            #     if ip_attempts == 0:
-            #         cache.set(ip_limit_key, 1, timeout=3600)
-            #     else:
-            #         cache.incr(ip_limit_key)
-            # except Exception:
-            #     return render(request, 'hackathon/login.html', {
-            #         'error_message': "SMS yuborishda xatolik yuz berdi",
-            #         'phone': phone
-            #     })
-            # return redirect('otp')
-            # --- End OTP ---
-
-            # Direct login without SMS verification
-            request.session['authenticated'] = True
-            request.session['phone'] = phone
-
-            if not application.is_submitted:
-                return redirect('form')
-            return redirect('profile')
+            message = (
+                f"Kodni hech kimga bermang! "
+                f"Andijon Ai hackaton ga kirish uchun tasdiqlash kodi: {otp}"
+            )
+            try:
+                send_sms(phone, message)
+                if attempts == 0:
+                    cache.set(limit_key, 1, timeout=3600)
+                else:
+                    cache.incr(limit_key)
+                if ip_attempts == 0:
+                    cache.set(ip_limit_key, 1, timeout=3600)
+                else:
+                    cache.incr(ip_limit_key)
+            except Exception:
+                return render(request, 'hackathon/login.html', {
+                    'error_message': "SMS yuborishda xatolik yuz berdi",
+                    'phone': phone
+                })
+            return redirect('otp')
 
         except Application.DoesNotExist:
             return render(request, 'hackathon/login.html', {

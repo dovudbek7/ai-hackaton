@@ -1,8 +1,14 @@
 from django.contrib import admin
 from django.http import HttpResponse
+from django.urls import path
+from django.shortcuts import render, redirect
+from django import forms
+from django.db import transaction
 from openpyxl import Workbook
+from openpyxl import load_workbook
 from openpyxl.styles import Font, Alignment
 from django.db.models import Count
+import json
 from .models import (
     Region,
     School,
@@ -56,6 +62,10 @@ class AISifatBahosiListFilter(admin.SimpleListFilter):
         if self.value():
             return queryset.filter(student_tests__ai_sifat_bahosi=self.value())
         return queryset
+
+
+class TestManagementImportForm(forms.Form):
+    file = forms.FileField()
 
 
 @admin.register(Region)
@@ -540,6 +550,7 @@ class StudentTestAdmin(admin.ModelAdmin):
 
 @admin.register(ApplicationTestManagement)
 class ApplicationTestManagementAdmin(admin.ModelAdmin):
+    change_list_template = "admin/hackathon/applicationtestmanagement/change_list.html"
     list_display = (
         'full_name',
         'phone',
@@ -555,10 +566,138 @@ class ApplicationTestManagementAdmin(admin.ModelAdmin):
     search_fields = ('full_name', 'phone', 'region__name', 'school__name')
     ordering = ('-created_at',)
     list_editable = ('overall_status',)
+    actions = ['set_umumiy_qabul_qilindi', 'set_umumiy_qabul_qilinmadi', 'set_umumiy_kutilayapti']
+
+    def get_urls(self):
+        urls = super().get_urls()
+        custom_urls = [
+            path(
+                'import-excel/',
+                self.admin_site.admin_view(self.import_excel_view),
+                name='hackathon_applicationtestmanagement_import_excel',
+            ),
+            path(
+                'import-json/',
+                self.admin_site.admin_view(self.import_json_view),
+                name='hackathon_applicationtestmanagement_import_json',
+            ),
+        ]
+        return custom_urls + urls
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
         return qs.select_related('region', 'school').prefetch_related('student_tests')
+
+    def set_umumiy_qabul_qilindi(self, request, queryset):
+        updated = queryset.update(overall_status=Application.OVERALL_STATUS_QABUL_QILINDI)
+        self.message_user(request, f"{updated} ta yozuv uchun umumiy holat: qabul_qilindi.")
+    set_umumiy_qabul_qilindi.short_description = "Umumiy holat -> qabul_qilindi"
+
+    def set_umumiy_qabul_qilinmadi(self, request, queryset):
+        updated = queryset.update(overall_status=Application.OVERALL_STATUS_QABUL_QILINMADI)
+        self.message_user(request, f"{updated} ta yozuv uchun umumiy holat: qabul_qilinmadi.")
+    set_umumiy_qabul_qilinmadi.short_description = "Umumiy holat -> qabul_qilinmadi"
+
+    def set_umumiy_kutilayapti(self, request, queryset):
+        updated = queryset.update(overall_status=Application.OVERALL_STATUS_KUTILAYAPTI)
+        self.message_user(request, f"{updated} ta yozuv uchun umumiy holat: kutilayapti.")
+    set_umumiy_kutilayapti.short_description = "Umumiy holat -> kutilayapti"
+
+    def _import_rows(self, rows):
+        updated_apps = 0
+        updated_tests = 0
+        with transaction.atomic():
+            for row in rows:
+                row = {(str(k).strip().lower() if k is not None else ''): v for k, v in dict(row).items()}
+                phone = str(row.get('phone') or row.get('telefon') or '').strip()
+                if not phone:
+                    continue
+
+                app = Application.objects.filter(phone=phone).first()
+                if not app:
+                    continue
+
+                overall_status = (row.get('overall_status') or row.get('umumiy_holat') or '').strip()
+                if overall_status in {
+                    Application.OVERALL_STATUS_QABUL_QILINDI,
+                    Application.OVERALL_STATUS_QABUL_QILINMADI,
+                    Application.OVERALL_STATUS_KUTILAYAPTI,
+                }:
+                    app.overall_status = overall_status
+                    app.save(update_fields=['overall_status', 'updated_at'])
+                    updated_apps += 1
+
+                test = app.student_tests.first()
+                if not test:
+                    continue
+
+                ai_holat = (row.get('ai_holat') or '').strip()
+                ai_sifat_bahosi = (row.get('ai_sifat_bahosi') or '').strip()
+                overall_ai_summary = (row.get('overall_ai_summary') or '').strip()
+
+                changed = False
+                if ai_holat in dict(StudentTest.AI_HOLAT_CHOICES):
+                    test.ai_holat = ai_holat
+                    changed = True
+                if ai_sifat_bahosi in dict(StudentTest.LEVEL_CHOICES):
+                    test.ai_sifat_bahosi = ai_sifat_bahosi
+                    changed = True
+                if overall_ai_summary:
+                    test.overall_ai_summary = overall_ai_summary
+                    changed = True
+                if changed:
+                    test.save(update_fields=['ai_holat', 'ai_sifat_bahosi', 'overall_ai_summary', 'updated_at'])
+                    updated_tests += 1
+        return updated_apps, updated_tests
+
+    def import_excel_view(self, request):
+        if request.method != 'POST':
+            return redirect('..')
+        form = TestManagementImportForm(request.POST, request.FILES)
+        if not form.is_valid():
+            self.message_user(request, "Excel fayl tanlanmagan.", level='ERROR')
+            return redirect('..')
+
+        file_obj = form.cleaned_data['file']
+        wb = load_workbook(file_obj)
+        ws = wb.active
+        headers = [str(c.value).strip().lower() if c.value else '' for c in ws[1]]
+        rows = []
+        for row_cells in ws.iter_rows(min_row=2, values_only=True):
+            row_dict = {}
+            for idx, value in enumerate(row_cells):
+                if idx < len(headers) and headers[idx]:
+                    row_dict[headers[idx]] = value
+            rows.append(row_dict)
+
+        apps, tests = self._import_rows(rows)
+        self.message_user(request, f"Excel import yakunlandi: application={apps}, tests={tests}")
+        return redirect('..')
+
+    def import_json_view(self, request):
+        if request.method != 'POST':
+            return redirect('..')
+        form = TestManagementImportForm(request.POST, request.FILES)
+        if not form.is_valid():
+            self.message_user(request, "JSON fayl tanlanmagan.", level='ERROR')
+            return redirect('..')
+
+        file_obj = form.cleaned_data['file']
+        try:
+            payload = json.loads(file_obj.read().decode('utf-8'))
+            if isinstance(payload, dict):
+                rows = payload.get('items') or payload.get('data') or []
+            elif isinstance(payload, list):
+                rows = payload
+            else:
+                rows = []
+        except Exception:
+            self.message_user(request, "JSON format xato.", level='ERROR')
+            return redirect('..')
+
+        apps, tests = self._import_rows(rows)
+        self.message_user(request, f"JSON import yakunlandi: application={apps}, tests={tests}")
+        return redirect('..')
 
     def _test_obj(self, obj):
         return obj.student_tests.first()

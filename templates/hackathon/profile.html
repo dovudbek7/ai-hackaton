@@ -28,6 +28,7 @@
 
     <main class="flex-1 flex flex-col items-center p-6">
 
+        {% if show_waiting_banner %}
         <div class="w-full mb-8 animate-fade-in status-banner-enter">
             <div
                 class="max-w-[960px] mx-auto rounded-xl border border-yellow-500/20 bg-gradient-to-r from-yellow-500/10 to-yellow-400/5 px-5 py-5 md:px-8 md:py-6">
@@ -70,6 +71,7 @@
                 </div>
             </div>
         </div>
+        {% endif %}
 
 
         <div class="w-full max-w-[960px] flex flex-col gap-6">
