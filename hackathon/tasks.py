@@ -1,10 +1,11 @@
 from celery import shared_task
 from django.conf import settings
 from django.utils import timezone
-from .models import Application
+from .models import Application, StudentTest
 import openai
 import json
 import logging
+from .services.ai_evaluator import AITestEvaluatorService
 
 logger = logging.getLogger(__name__)
 
@@ -117,3 +118,19 @@ Ariza tavsifi:
     except Exception as e:
         logger.error(f"Application {application_id} tahlilida xatolik: {e}")
         raise self.retry(exc=e, countdown=60)
+
+
+@shared_task(bind=True, max_retries=3)
+def evaluate_student_test_async(self, test_id):
+    try:
+        test = StudentTest.objects.get(pk=test_id)
+        if not test.is_submitted:
+            logger.info("StudentTest %s skipped: not submitted", test_id)
+            return
+
+        AITestEvaluatorService.evaluate_test(test_id=test_id)
+    except StudentTest.DoesNotExist:
+        logger.error("StudentTest %s topilmadi", test_id)
+    except Exception as e:
+        logger.error("StudentTest %s baholashida xatolik: %s", test_id, e)
+        raise self.retry(exc=e, countdown=30)

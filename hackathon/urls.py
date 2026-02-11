@@ -7,6 +7,7 @@ urlpatterns = [
     path('register/otp/', views.otp_view, name='otp'),
     path('register/form/', views.form_view, name='form'),
     path('profile/', views.profile_view, name='profile'),
+    path('profile/test/', views.StudentTestView.as_view(), name='student-test'),
     
     # Authentication URLs
     path('login/', views.login_view, name='login'),

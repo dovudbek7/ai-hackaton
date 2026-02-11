@@ -3,8 +3,59 @@ from django.http import HttpResponse
 from openpyxl import Workbook
 from openpyxl.styles import Font, Alignment
 from django.db.models import Count
-from .models import Region, School, Application, BotUser, ApplicationStatusAudit
+from .models import (
+    Region,
+    School,
+    Application,
+    BotUser,
+    ApplicationStatusAudit,
+    Question,
+    StudentTest,
+    StudentAnswer,
+    AIAnswerEvaluation,
+    ApplicationTestManagement,
+    RegionTestControl,
+)
 from .tasks import analyze_application
+
+
+class OverallStatusListFilter(admin.SimpleListFilter):
+    title = 'umumiy_holat'
+    parameter_name = 'umumiy_holat'
+
+    def lookups(self, request, model_admin):
+        return Application.OVERALL_STATUS_CHOICES
+
+    def queryset(self, request, queryset):
+        if self.value():
+            return queryset.filter(overall_status=self.value())
+        return queryset
+
+
+class AIHolatListFilter(admin.SimpleListFilter):
+    title = 'ai_holat'
+    parameter_name = 'ai_holat'
+
+    def lookups(self, request, model_admin):
+        return StudentTest.AI_HOLAT_CHOICES
+
+    def queryset(self, request, queryset):
+        if self.value():
+            return queryset.filter(student_tests__ai_holat=self.value())
+        return queryset
+
+
+class AISifatBahosiListFilter(admin.SimpleListFilter):
+    title = 'ai_sifat_bahosi'
+    parameter_name = 'ai_sifat_bahosi'
+
+    def lookups(self, request, model_admin):
+        return StudentTest.LEVEL_CHOICES
+
+    def queryset(self, request, queryset):
+        if self.value():
+            return queryset.filter(student_tests__ai_sifat_bahosi=self.value())
+        return queryset
 
 
 @admin.register(Region)
@@ -13,6 +64,14 @@ class RegionAdmin(admin.ModelAdmin):
     list_filter = ['is_open']
     search_fields = ['name']
     list_editable = ['is_open']
+
+
+@admin.register(RegionTestControl)
+class RegionTestControlAdmin(admin.ModelAdmin):
+    list_display = ('region', 'is_test_active', 'updated_at')
+    list_filter = ('is_test_active', 'region')
+    search_fields = ('region__name',)
+    list_editable = ('is_test_active',)
 
 
 def export_school_stats_xls(modeladmin, request, queryset):
@@ -402,6 +461,130 @@ class ApplicationAdmin(admin.ModelAdmin):
             'fields': ('created_at', 'updated_at'),
         }),
     )
+
+
+@admin.register(Question)
+class QuestionAdmin(admin.ModelAdmin):
+    list_display = ('id', 'short_prompt', 'is_active', 'created_at', 'updated_at')
+    list_filter = ('is_active', 'created_at')
+    search_fields = ('prompt',)
+    list_editable = ('is_active',)
+
+    def short_prompt(self, obj):
+        if len(obj.prompt) <= 100:
+            return obj.prompt
+        return f"{obj.prompt[:100]}..."
+    short_prompt.short_description = "Savol"
+
+
+class AIAnswerEvaluationInline(admin.StackedInline):
+    model = AIAnswerEvaluation
+    extra = 0
+    can_delete = False
+    fk_name = 'answer'
+    readonly_fields = ('created_at', 'updated_at')
+
+
+class StudentAnswerInline(admin.StackedInline):
+    model = StudentAnswer
+    extra = 0
+    readonly_fields = ('question', 'written_answer', 'created_at', 'updated_at')
+    can_delete = False
+    show_change_link = True
+
+
+@admin.register(StudentAnswer)
+class StudentAnswerAdmin(admin.ModelAdmin):
+    list_display = ('id', 'test', 'question', 'preview_answer', 'get_score_level')
+    list_select_related = ('test__student', 'question')
+    search_fields = ('test__student__full_name', 'test__student__phone', 'question__prompt', 'written_answer')
+    inlines = [AIAnswerEvaluationInline]
+
+    def preview_answer(self, obj):
+        text = obj.written_answer or ''
+        if len(text) <= 80:
+            return text
+        return f"{text[:80]}..."
+    preview_answer.short_description = "Javob"
+
+    def get_score_level(self, obj):
+        return getattr(getattr(obj, 'ai_evaluation', None), 'score_level', '-')
+    get_score_level.short_description = "AI Daraja"
+
+
+@admin.register(StudentTest)
+class StudentTestAdmin(admin.ModelAdmin):
+    list_display = (
+        'id',
+        'student_full_name',
+        'student_phone',
+        'is_submitted',
+        'ai_sifat_bahosi',
+        'ai_holat',
+        'submitted_at',
+    )
+    list_filter = ('is_submitted', 'ai_holat', 'ai_sifat_bahosi', 'submitted_at')
+    search_fields = ('student__full_name', 'student__phone')
+    list_select_related = ('student', 'student__region', 'student__school')
+    readonly_fields = ('created_at', 'updated_at', 'submitted_at')
+    inlines = [StudentAnswerInline]
+
+    def student_full_name(self, obj):
+        return obj.student.full_name
+    student_full_name.short_description = 'Full name'
+
+    def student_phone(self, obj):
+        return obj.student.phone
+    student_phone.short_description = 'Phone'
+
+
+@admin.register(ApplicationTestManagement)
+class ApplicationTestManagementAdmin(admin.ModelAdmin):
+    list_display = (
+        'full_name',
+        'phone',
+        'region',
+        'school',
+        'overall_status',
+        'ai_holat',
+        'ai_sifat_bahosi',
+        'overall_ai_summary',
+        'test_submitted',
+    )
+    list_filter = ('region', OverallStatusListFilter, AIHolatListFilter, AISifatBahosiListFilter)
+    search_fields = ('full_name', 'phone', 'region__name', 'school__name')
+    ordering = ('-created_at',)
+    list_editable = ('overall_status',)
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        return qs.select_related('region', 'school').prefetch_related('student_tests')
+
+    def _test_obj(self, obj):
+        return obj.student_tests.first()
+
+    def ai_sifat_bahosi(self, obj):
+        test = self._test_obj(obj)
+        return test.ai_sifat_bahosi if test else '-'
+    ai_sifat_bahosi.short_description = 'ai_sifat_bahosi'
+
+    def ai_holat(self, obj):
+        test = self._test_obj(obj)
+        return test.ai_holat if test else StudentTest.AI_HOLAT_KUTILAYAPTI
+    ai_holat.short_description = 'ai_holat'
+
+    def overall_ai_summary(self, obj):
+        test = self._test_obj(obj)
+        if not test or not test.overall_ai_summary:
+            return '-'
+        return test.overall_ai_summary[:140]
+    overall_ai_summary.short_description = 'overall_ai_summary'
+
+    def test_submitted(self, obj):
+        test = self._test_obj(obj)
+        return bool(test and test.is_submitted)
+    test_submitted.short_description = 'test_submitted'
+    test_submitted.boolean = True
 
 
 @admin.register(BotUser)

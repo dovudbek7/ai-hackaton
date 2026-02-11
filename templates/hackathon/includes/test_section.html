@@ -1,0 +1,19 @@
+{% if can_access_test %}
+<div class="bg-white dark:bg-white/5 p-6 rounded-xl border border-slate-200 dark:border-white/10 shadow-lg">
+  <h3 class="text-slate-900 dark:text-white font-bold text-lg">Yozma test</h3>
+
+  {% if test and test.is_submitted %}
+    <p class="text-sm text-slate-700 dark:text-white/80 mt-2">{{ student_result_text }}</p>
+    <a href="{% url 'student-test' %}" class="inline-flex mt-4 px-4 py-2 rounded-lg bg-slate-700 text-white text-sm">
+      Test holatini ko'rish
+    </a>
+  {% elif can_access_test %}
+    <p class="text-sm text-slate-500 dark:text-white/60 mt-2">
+      Sizga 5 ta tasodifiy savol beriladi. Test faqat bir marta topshiriladi.
+    </p>
+    <a href="{% url 'student-test' %}" class="inline-flex mt-4 px-4 py-2 rounded-lg bg-primary text-white text-sm font-semibold">
+      Testni boshlash
+    </a>
+  {% endif %}
+</div>
+{% endif %}

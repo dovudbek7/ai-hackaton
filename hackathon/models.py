@@ -75,6 +75,15 @@ class Application(models.Model):
         ('accepted', 'QABUL QILINDI'),
         ('rejected', 'RAD ETILDI'),
     ]
+
+    OVERALL_STATUS_QABUL_QILINDI = "qabul_qilindi"
+    OVERALL_STATUS_QABUL_QILINMADI = "qabul_qilinmadi"
+    OVERALL_STATUS_KUTILAYAPTI = "kutilayapti"
+    OVERALL_STATUS_CHOICES = [
+        (OVERALL_STATUS_QABUL_QILINDI, "Qabul qilindi"),
+        (OVERALL_STATUS_QABUL_QILINMADI, "Qabul qilinmadi"),
+        (OVERALL_STATUS_KUTILAYAPTI, "Kutilayapti"),
+    ]
     
     AI_STATUS_CHOICES = [
         ('pending', 'KUTILMOQDA'),
@@ -133,6 +142,13 @@ class Application(models.Model):
         choices=STATUS_CHOICES, 
         default='pending',
         verbose_name="Holat"
+    )
+    overall_status = models.CharField(
+        max_length=20,
+        choices=OVERALL_STATUS_CHOICES,
+        default=OVERALL_STATUS_KUTILAYAPTI,
+        db_index=True,
+        verbose_name="Umumiy holat (admin)",
     )
 
     # AI Analysis Fields
@@ -216,3 +232,179 @@ class ApplicationStatusAudit(models.Model):
     
     def __str__(self):
         return f"{self.application.full_name}: {self.previous_status} → {self.new_status}"
+
+
+class Question(models.Model):
+    """Written test question bank."""
+
+    prompt = models.TextField(verbose_name="Savol matni")
+    is_active = models.BooleanField(default=True, db_index=True, verbose_name="Faol")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Yaratilgan sana")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="Yangilangan sana")
+
+    class Meta:
+        verbose_name = "Test savoli"
+        verbose_name_plural = "Test savollari"
+        ordering = ["id"]
+
+    def __str__(self):
+        return f"Savol #{self.pk}"
+
+
+class RegionTestControl(models.Model):
+    region = models.ForeignKey(
+        Region,
+        on_delete=models.CASCADE,
+        related_name="test_controls",
+        verbose_name="Hudud",
+    )
+    is_test_active = models.BooleanField(default=False, verbose_name="Test faol")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Hudud test nazorati"
+        verbose_name_plural = "Hudud test nazoratlari"
+
+    def __str__(self):
+        state = "faol" if self.is_test_active else "faol emas"
+        return f"{self.region.name}: {state}"
+
+
+class StudentTest(models.Model):
+    LEVEL_VERY_LOW = "very_low"
+    LEVEL_LOW = "low"
+    LEVEL_MEDIUM = "medium"
+    LEVEL_HIGH = "high"
+    LEVEL_VERY_HIGH = "very_high"
+    LEVEL_CHOICES = [
+        (LEVEL_VERY_LOW, "Very Low"),
+        (LEVEL_LOW, "Low"),
+        (LEVEL_MEDIUM, "Medium"),
+        (LEVEL_HIGH, "High"),
+        (LEVEL_VERY_HIGH, "Very High"),
+    ]
+
+    AI_HOLAT_QABUL_QILINDI = "qabul_qilindi"
+    AI_HOLAT_QABUL_QILINMADI = "qabul_qilinmadi"
+    AI_HOLAT_KUTILAYAPTI = "kutilayapti"
+    AI_HOLAT_CHOICES = [
+        (AI_HOLAT_QABUL_QILINDI, "Qabul qilindi"),
+        (AI_HOLAT_QABUL_QILINMADI, "Qabul qilinmadi"),
+        (AI_HOLAT_KUTILAYAPTI, "Kutilayapti"),
+    ]
+
+    student = models.ForeignKey(
+        Application,
+        on_delete=models.CASCADE,
+        related_name="student_tests",
+        verbose_name="O'quvchi",
+    )
+    is_submitted = models.BooleanField(default=False, db_index=True, verbose_name="Yuborilgan")
+    submitted_at = models.DateTimeField(null=True, blank=True, verbose_name="Yuborilgan vaqt")
+    ai_sifat_bahosi = models.CharField(
+        max_length=20,
+        choices=LEVEL_CHOICES,
+        null=True,
+        blank=True,
+        verbose_name="AI sifat bahosi",
+    )
+    ai_holat = models.CharField(
+        max_length=20,
+        choices=AI_HOLAT_CHOICES,
+        default=AI_HOLAT_KUTILAYAPTI,
+        db_index=True,
+        verbose_name="AI holati",
+    )
+    overall_ai_summary = models.TextField(
+        null=True,
+        blank=True,
+        verbose_name="AI umumiy xulosa",
+    )
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Yaratilgan sana")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="Yangilangan sana")
+
+    class Meta:
+        verbose_name = "Student test"
+        verbose_name_plural = "Student tests"
+        constraints = [
+            models.UniqueConstraint(fields=["student"], name="unique_test_per_student")
+        ]
+        indexes = [
+            models.Index(fields=["ai_holat"], name="studenttest_ai_holat_idx"),
+            models.Index(fields=["submitted_at"], name="studenttest_submitted_idx"),
+        ]
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"Test #{self.pk} - {self.student.full_name}"
+
+
+class StudentAnswer(models.Model):
+    test = models.ForeignKey(
+        StudentTest,
+        on_delete=models.CASCADE,
+        related_name="answers",
+        verbose_name="Test",
+    )
+    question = models.ForeignKey(
+        Question,
+        on_delete=models.PROTECT,
+        related_name="student_answers",
+        verbose_name="Savol",
+    )
+    written_answer = models.TextField(blank=True, default="", verbose_name="Yozma javob")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Student answer"
+        verbose_name_plural = "Student answers"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["test", "question"], name="unique_question_per_test"
+            )
+        ]
+        indexes = [
+            models.Index(fields=["test"], name="studentanswer_test_idx"),
+        ]
+        ordering = ["id"]
+
+    def __str__(self):
+        return f"Javob #{self.pk} - Test #{self.test_id}"
+
+
+class AIAnswerEvaluation(models.Model):
+    SCORE_LEVEL_CHOICES = StudentTest.LEVEL_CHOICES
+
+    answer = models.OneToOneField(
+        StudentAnswer,
+        on_delete=models.CASCADE,
+        related_name="ai_evaluation",
+        verbose_name="Javob",
+    )
+    score_level = models.CharField(
+        max_length=20, choices=SCORE_LEVEL_CHOICES, verbose_name="Baholash darajasi"
+    )
+    short_reason = models.CharField(max_length=500, verbose_name="Qisqa izoh")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "AI answer evaluation"
+        verbose_name_plural = "AI answer evaluations"
+        indexes = [
+            models.Index(fields=["score_level"], name="aievaluation_score_idx"),
+        ]
+
+    def __str__(self):
+        return f"AI baho #{self.pk} - {self.score_level}"
+
+
+class ApplicationTestManagement(Application):
+    """Proxy model for custom admin section."""
+
+    class Meta:
+        proxy = True
+        verbose_name = "Hackathon test management"
+        verbose_name_plural = "HACKATHON TEST MANAGEMENT"
