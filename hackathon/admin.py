@@ -22,7 +22,7 @@ from .models import (
     ApplicationTestManagement,
     RegionTestControl,
 )
-from .tasks import analyze_application
+from .tasks import analyze_application, evaluate_all_pending_tests, evaluate_all_submitted_tests, evaluate_student_test_async
 
 
 class OverallStatusListFilter(admin.SimpleListFilter):
@@ -522,6 +522,189 @@ class StudentAnswerAdmin(admin.ModelAdmin):
     get_score_level.short_description = "AI Daraja"
 
 
+# ===== StudentTest Export Functions =====
+
+def export_studenttest_to_excel(modeladmin, request, queryset):
+    """StudentTestlarni Excel faylga yuklab olish"""
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Student Tests"
+    
+    # Headers
+    headers = [
+        "ID",
+        "Student Name",
+        "Phone",
+        "Region",
+        "School",
+        "Grade",
+        "Is Submitted",
+        "Submitted At",
+        "AI Sifat Bahosi",
+        "AI Holati",
+        "Overall AI Summary",
+        "Created At",
+    ]
+    
+    for col_num, header in enumerate(headers, 1):
+        cell = ws.cell(row=1, column=col_num, value=header)
+        cell.font = Font(bold=True)
+        cell.alignment = Alignment(horizontal='center')
+    
+    # Write data
+    for row_num, test in enumerate(queryset.prefetch_related('student__region', 'student__school'), 2):
+        student = test.student
+        ws.cell(row=row_num, column=1, value=test.id)
+        ws.cell(row=row_num, column=2, value=student.full_name if student else "-")
+        ws.cell(row=row_num, column=3, value=student.phone if student else "-")
+        ws.cell(row=row_num, column=4, value=student.region.name if student and student.region else "-")
+        ws.cell(row=row_num, column=5, value=student.school.name if student and student.school else "-")
+        ws.cell(row=row_num, column=6, value=student.get_grade_display() if student else "-")
+        ws.cell(row=row_num, column=7, value="Ha" if test.is_submitted else "Yo'q")
+        ws.cell(row=row_num, column=8, value=test.submitted_at.strftime('%Y-%m-%d %H:%M') if test.submitted_at else "-")
+        ws.cell(row=row_num, column=9, value=test.get_ai_sifat_bahosi_display() if test.ai_sifat_bahosi else "-")
+        ws.cell(row=row_num, column=10, value=test.get_ai_holat_display() if test.ai_holat else "-")
+        ws.cell(row=row_num, column=11, value=test.overall_ai_summary or "-")
+        ws.cell(row=row_num, column=12, value=test.created_at.strftime('%Y-%m-%d %H:%M'))
+    
+    # Auto-adjust column widths
+    for column in ws.columns:
+        max_length = 0
+        column_letter = column[0].column_letter
+        for cell in column:
+            try:
+                if len(str(cell.value)) > max_length:
+                    max_length = len(str(cell.value))
+            except:
+                pass
+        adjusted_width = min(max_length + 2, 50)
+        ws.column_dimensions[column_letter].width = adjusted_width
+    
+    response = HttpResponse(
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    response['Content-Disposition'] = 'attachment; filename=student_tests.xlsx'
+    wb.save(response)
+    return response
+
+export_studenttest_to_excel.short_description = "Excel faylga yuklab olish"
+
+
+def export_studenttest_to_json(modeladmin, request, queryset):
+    """StudentTestlarni JSON faylga yuklab olish"""
+    import json
+    
+    data = []
+    for test in queryset.prefetch_related('student__region', 'student__school'):
+        student = test.student
+        # Get all answers with evaluations
+        answers_data = []
+        for answer in test.answers.select_related('question', 'ai_evaluation').all():
+            evaluation = getattr(answer, 'ai_evaluation', None)
+            answers_data.append({
+                "question_id": answer.question_id,
+                "question_prompt": answer.question.prompt,
+                "written_answer": answer.written_answer,
+                "score_level": evaluation.score_level if evaluation else None,
+                "short_reason": evaluation.short_reason if evaluation else None,
+            })
+        
+        data.append({
+            "id": test.id,
+            "student": {
+                "id": student.id if student else None,
+                "full_name": student.full_name if student else None,
+                "phone": student.phone if student else None,
+                "region": student.region.name if student and student.region else None,
+                "school": student.school.name if student and student.school else None,
+                "grade": student.get_grade_display() if student else None,
+            } if student else None,
+            "is_submitted": test.is_submitted,
+            "submitted_at": test.submitted_at.strftime('%Y-%m-%d %H:%M') if test.submitted_at else None,
+            "ai_sifat_bahosi": test.ai_sifat_bahosi,
+            "ai_holat": test.ai_holat,
+            "overall_ai_summary": test.overall_ai_summary,
+            "answers": answers_data,
+            "created_at": test.created_at.strftime('%Y-%m-%d %H:%M'),
+            "updated_at": test.updated_at.strftime('%Y-%m-%d %H:%M'),
+        })
+    
+    response = HttpResponse(
+        json.dumps(data, ensure_ascii=False, indent=2),
+        content_type='application/json'
+    )
+    response['Content-Disposition'] = 'attachment; filename=student_tests.json'
+    return response
+
+export_studenttest_to_json.short_description = "JSON faylga yuklab olish"
+
+
+def run_ai_evaluation_selected(modeladmin, request, queryset):
+    """Tanlangan testlarni AI bilan baholash"""
+    triggered_count = 0
+    skipped_count = 0
+    
+    for test in queryset:
+        if test.is_submitted:
+            evaluate_student_test_async.delay(test.id)
+            triggered_count += 1
+        else:
+            skipped_count += 1
+    
+    msg = f"{triggered_count} ta test AI baholashiga yuborildi."
+    if skipped_count > 0:
+        msg += f" {skipped_count} ta test yuborilmaganligi sababli o'tkazildi."
+    
+    modeladmin.message_user(request, msg)
+
+run_ai_evaluation_selected.short_description = "Tanlangan testlarni AI bilan baholash"
+
+
+def evaluate_all_pending_tests_action(modeladmin, request, queryset):
+    """Barcha pending testlarni AI bilan baholash"""
+    from django.db.models import Q
+    
+    # Get all pending tests (not just selected)
+    pending_tests = StudentTest.objects.filter(
+        is_submitted=True,
+        ai_holat=StudentTest.AI_HOLAT_KUTILAYAPTI
+    )
+    
+    test_ids = list(pending_tests.values_list('id', flat=True))
+    total_count = len(test_ids)
+    
+    if total_count == 0:
+        modeladmin.message_user(request, "Barcha testlar allaqachon baholangan yoki yuborilmagan.")
+        return
+    
+    # Queue each test for evaluation
+    for test_id in test_ids:
+        evaluate_student_test_async.delay(test_id)
+    
+    modeladmin.message_user(request, f"{total_count} ta test AI baholashiga yuborildi.")
+
+evaluate_all_pending_tests_action.short_description = "Barcha pending testlarni AI bilan baholash"
+
+
+def evaluate_all_submitted_tests_action(modeladmin, request, queryset):
+    """Barcha yuborilgan testlarni qayta baholash"""
+    submitted_tests = StudentTest.objects.filter(is_submitted=True)
+    test_ids = list(submitted_tests.values_list('id', flat=True))
+    total_count = len(test_ids)
+    
+    if total_count == 0:
+        modeladmin.message_user(request, "Yuborilgan testlar topilmadi.")
+        return
+    
+    # Queue each test for evaluation
+    for test_id in test_ids:
+        evaluate_student_test_async.delay(test_id)
+    
+    modeladmin.message_user(request, f"{total_count} ta test qayta baholash uchun yuborildi.")
+
+evaluate_all_submitted_tests_action.short_description = "Barcha yuborilgan testlarni qayta baholash"
+
+
 @admin.register(StudentTest)
 class StudentTestAdmin(admin.ModelAdmin):
     list_display = (
@@ -538,6 +721,15 @@ class StudentTestAdmin(admin.ModelAdmin):
     list_select_related = ('student', 'student__region', 'student__school')
     readonly_fields = ('created_at', 'updated_at', 'submitted_at')
     inlines = [StudentAnswerInline]
+    
+    # Add export and evaluation actions
+    actions = [
+        export_studenttest_to_excel,
+        export_studenttest_to_json,
+        run_ai_evaluation_selected,
+        evaluate_all_pending_tests_action,
+        evaluate_all_submitted_tests_action,
+    ]
 
     def student_full_name(self, obj):
         return obj.student.full_name
@@ -546,6 +738,128 @@ class StudentTestAdmin(admin.ModelAdmin):
     def student_phone(self, obj):
         return obj.student.phone
     student_phone.short_description = 'Phone'
+
+
+evaluate_all_submitted_tests_action.short_description = "Barcha yuborilgan testlarni qayta baholash"
+
+
+# ===== ApplicationTestManagement Export Functions =====
+
+def export_testmanagement_to_excel(modeladmin, request, queryset):
+    """ApplicationTestManagement ni Excel faylga yuklab olish"""
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Students"
+    
+    # Headers
+    headers = [
+        "ID",
+        "Full Name",
+        "Phone",
+        "Region",
+        "School",
+        "Grade",
+        "Overall Status",
+        "Test Submitted",
+        "AI Holati",
+        "AI Sifat Bahosi",
+        "Overall AI Summary",
+        "Created At",
+    ]
+    
+    for col_num, header in enumerate(headers, 1):
+        cell = ws.cell(row=1, column=col_num, value=header)
+        cell.font = Font(bold=True)
+        cell.alignment = Alignment(horizontal='center')
+    
+    # Write data
+    for row_num, app in enumerate(queryset.prefetch_related('student_tests', 'region', 'school'), 2):
+        test = app.student_tests.first()
+        ws.cell(row=row_num, column=1, value=app.id)
+        ws.cell(row=row_num, column=2, value=app.full_name)
+        ws.cell(row=row_num, column=3, value=app.phone)
+        ws.cell(row=row_num, column=4, value=app.region.name if app.region else "-")
+        ws.cell(row=row_num, column=5, value=app.school.name if app.school else "-")
+        ws.cell(row=row_num, column=6, value=app.get_grade_display())
+        ws.cell(row=row_num, column=7, value=app.get_overall_status_display())
+        ws.cell(row=row_num, column=8, value="Ha" if test and test.is_submitted else "Yo'q")
+        ws.cell(row=row_num, column=9, value=test.get_ai_holat_display() if test and test.ai_holat else "-")
+        ws.cell(row=row_num, column=10, value=test.get_ai_sifat_bahosi_display() if test and test.ai_sifat_bahosi else "-")
+        ws.cell(row=row_num, column=11, value=test.overall_ai_summary if test and test.overall_ai_summary else "-")
+        ws.cell(row=row_num, column=12, value=app.created_at.strftime('%Y-%m-%d %H:%M'))
+    
+    # Auto-adjust column widths
+    for column in ws.columns:
+        max_length = 0
+        column_letter = column[0].column_letter
+        for cell in column:
+            try:
+                if len(str(cell.value)) > max_length:
+                    max_length = len(str(cell.value))
+            except:
+                pass
+        adjusted_width = min(max_length + 2, 50)
+        ws.column_dimensions[column_letter].width = adjusted_width
+    
+    response = HttpResponse(
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    response['Content-Disposition'] = 'attachment; filename=students_export.xlsx'
+    wb.save(response)
+    return response
+
+export_testmanagement_to_excel.short_description = "Excel faylga yuklab olish"
+
+
+def export_testmanagement_to_json(modeladmin, request, queryset):
+    """ApplicationTestManagement ni JSON faylga yuklab olish"""
+    import json
+    
+    data = []
+    for app in queryset.prefetch_related('student_tests', 'student_tests__answers', 'student_tests__answers__question', 'student_tests__answers__ai_evaluation', 'region', 'school'):
+        test = app.student_tests.first()
+        
+        # Get answers if test exists
+        answers_data = []
+        if test:
+            for answer in test.answers.select_related('question', 'ai_evaluation').all():
+                evaluation = getattr(answer, 'ai_evaluation', None)
+                answers_data.append({
+                    "question_id": answer.question_id,
+                    "question_prompt": answer.question.prompt,
+                    "written_answer": answer.written_answer,
+                    "score_level": evaluation.score_level if evaluation else None,
+                    "short_reason": evaluation.short_reason if evaluation else None,
+                })
+        
+        data.append({
+            "id": app.id,
+            "full_name": app.full_name,
+            "phone": app.phone,
+            "region": app.region.name if app.region else None,
+            "school": app.school.name if app.school else None,
+            "grade": app.get_grade_display(),
+            "overall_status": app.overall_status,
+            "test": {
+                "id": test.id if test else None,
+                "is_submitted": test.is_submitted if test else None,
+                "submitted_at": test.submitted_at.strftime('%Y-%m-%d %H:%M') if test and test.submitted_at else None,
+                "ai_sifat_bahosi": test.ai_sifat_bahosi if test else None,
+                "ai_holat": test.ai_holat if test else None,
+                "overall_ai_summary": test.overall_ai_summary if test else None,
+                "answers": answers_data,
+            } if test else None,
+            "created_at": app.created_at.strftime('%Y-%m-%d %H:%M'),
+        })
+    
+    response = HttpResponse(
+        json.dumps(data, ensure_ascii=False, indent=2),
+        content_type='application/json'
+    )
+    response['Content-Disposition'] = 'attachment; filename=students_export.json'
+    return response
+
+export_testmanagement_to_json.short_description = "JSON faylga yuklab olish"
 
 
 @admin.register(ApplicationTestManagement)
@@ -566,7 +880,13 @@ class ApplicationTestManagementAdmin(admin.ModelAdmin):
     search_fields = ('full_name', 'phone', 'region__name', 'school__name')
     ordering = ('-created_at',)
     list_editable = ('overall_status',)
-    actions = ['set_umumiy_qabul_qilindi', 'set_umumiy_qabul_qilinmadi', 'set_umumiy_kutilayapti']
+    actions = [
+        'set_umumiy_qabul_qilindi', 
+        'set_umumiy_qabul_qilinmadi', 
+        'set_umumiy_kutilayapti',
+        export_testmanagement_to_excel,
+        export_testmanagement_to_json,
+    ]
 
     def get_urls(self):
         urls = super().get_urls()

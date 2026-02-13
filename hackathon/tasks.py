@@ -134,3 +134,72 @@ def evaluate_student_test_async(self, test_id):
     except Exception as e:
         logger.error("StudentTest %s baholashida xatolik: %s", test_id, e)
         raise self.retry(exc=e, countdown=30)
+
+
+@shared_task(bind=True)
+def evaluate_all_pending_tests(self, limit=100):
+    """
+    Barcha pending (kutilayapti) testlarni AI bilan baholash.
+    
+    Usage:
+        - evaluate_all_pending_tests.delay() - default 100 ta
+        - evaluate_all_pending_tests.delay(limit=500) - 500 ta gacha
+        - evaluate_all_pending_tests.delay(limit=None) - barchasi
+    """
+    from django.db.models import Q
+    
+    # Get tests that are submitted but not yet evaluated (ai_holat = 'kutilayapti')
+    queryset = StudentTest.objects.filter(
+        is_submitted=True,
+        ai_holat=StudentTest.AI_HOLAT_KUTILAYAPTI
+    )
+    
+    if limit:
+        queryset = queryset[:limit]
+    
+    test_ids = list(queryset.values_list('id', flat=True))
+    total_count = len(test_ids)
+    
+    if total_count == 0:
+        logger.info("No pending tests to evaluate")
+        return {"message": "No pending tests to evaluate", "count": 0}
+    
+    # Queue each test for evaluation
+    for test_id in test_ids:
+        evaluate_student_test_async.delay(test_id)
+    
+    logger.info("Queued %s tests for AI evaluation", total_count)
+    return {
+        "message": f"{total_count} tests queued for evaluation",
+        "count": total_count,
+        "test_ids": test_ids[:10]  # Return first 10 for reference
+    }
+
+
+@shared_task(bind=True)
+def evaluate_all_submitted_tests(self):
+    """
+    Barcha yuborilgan testlarni qayta baholash (ai_holatidan qat'i nazar).
+    Faqat is_submitted=True bo'lganlarni oladi.
+    
+    Usage:
+        - evaluate_all_submitted_tests.delay() - barcha yuborilgan testlar
+    """
+    queryset = StudentTest.objects.filter(is_submitted=True)
+    test_ids = list(queryset.values_list('id', flat=True))
+    total_count = len(test_ids)
+    
+    if total_count == 0:
+        logger.info("No submitted tests to evaluate")
+        return {"message": "No submitted tests to evaluate", "count": 0}
+    
+    # Queue each test for evaluation
+    for test_id in test_ids:
+        evaluate_student_test_async.delay(test_id)
+    
+    logger.info("Queued %s submitted tests for AI evaluation", total_count)
+    return {
+        "message": f"{total_count} submitted tests queued for re-evaluation",
+        "count": total_count,
+        "test_ids": test_ids[:10]
+    }
