@@ -53,6 +53,15 @@ def send_sms(phone, message):
         # Re-raise so views can handle error messaging
         raise e
 
+
+def send_result_sms(phone, student_name):
+    """
+    Sends result notification SMS to student.
+    Message: "Assalomu alaykum {name} Andijon AI Hackatonidan natijangiz e'lon qilindi ushbu link orqali kirib ko'ringishingiz mumkin: https://t.me/andijon_hackaton_bot"
+    """
+    message = f"Assalomu alaykum {student_name} Andijon AI Hackatonidan natijangiz e'lon qilindi ushbu link orqali kirib ko'ringishingiz mumkin: https://t.me/andijon_hackaton_bot"
+    return send_sms(phone, message)
+
 def get_client_ip(request):
     """
     Get client IP address from request

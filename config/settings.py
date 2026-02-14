@@ -148,8 +148,8 @@ LINKSMS_LOGIN = (os.getenv('LINKSMS_LOGIN') or "").strip()
 LINKSMS_PASSWORD = (os.getenv('LINKSMS_PASSWORD') or "").strip()
 LINKSMS_SENDER = (os.getenv('LINKSMS_SENDER', "HACKATHON") or "HACKATHON").strip()
 
-ESKIZ_EMAIL = ((os.getenv("ESKIZ_EMAIL") or LINKSMS_LOGIN) or "").strip()
-ESKIZ_PASSWORD = ((os.getenv("ESKIZ_PASSWORD") or LINKSMS_PASSWORD) or "").strip()
+ESKIZ_EMAIL = (os.getenv("ESKIZ_EMAIL") or LINKSMS_LOGIN or "").strip()
+ESKIZ_PASSWORD = (os.getenv("ESKIZ_PASSWORD") or LINKSMS_PASSWORD or "").strip()
 
 # Logging Configuration
 # Ensure log directory exists to avoid FileHandler configuration errors
