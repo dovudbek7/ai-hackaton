@@ -1,4 +1,3 @@
-
 import os
 import re
 import logging
@@ -18,6 +17,9 @@ from telegram.ext import (
 
 # Setup Django without triggering admin autodiscovery
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
+
+# Minimal Django setup - avoid loading admin
+import django
 from django.conf import settings
 if not settings.configured:
     django.setup()
@@ -153,7 +155,6 @@ class Command(BaseCommand):
         await update.message.reply_text(info_text, parse_mode='Markdown', reply_markup=reply_markup)
         return PHONE_INPUT
 
-    # PHONE INPUT FIRST
     async def ask_phone_handler(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         query = update.callback_query
         await query.answer()
@@ -174,8 +175,6 @@ class Command(BaseCommand):
                     missing_channels.append(channel)
             except Exception as e:
                 logger.warning(f"Failed channel check {channel}: {e}")
-                # If we can't verify, assume user is NOT subscribed
-                # This ensures users must still subscribe even if bot lacks permissions
                 missing_channels.append(channel)
 
         if missing_channels:
@@ -202,7 +201,6 @@ class Command(BaseCommand):
         else:
             return await self.show_result(update, context)
 
-    # PHONE INPUT
     async def process_phone(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         text = update.message.text
         phone = re.sub(r'\D', '', text)
@@ -264,7 +262,6 @@ class Command(BaseCommand):
         elif "Timed out" in str(context.error):
             logger.warning("Network timeout. Retrying...")
             
-    # RE-VERIFY CHANNELS BEFORE RESULT
     async def proceed_to_channel_gate(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         query = update.callback_query
         await query.answer()
@@ -281,7 +278,6 @@ class Command(BaseCommand):
                     missing_channels.append(channel)
             except Exception as e:
                 logger.warning(f"Failed channel check {channel}: {e}")
-                # If we can't verify, assume user is NOT subscribed
                 missing_channels.append(channel)
 
         if missing_channels:
@@ -305,7 +301,6 @@ class Command(BaseCommand):
         else:
             return await self.show_result(update, context)
 
-    # RESULT DISPLAY
     async def show_result(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         app_data = context.user_data.get('app_data')
         if not app_data:
@@ -336,10 +331,6 @@ class Command(BaseCommand):
             response = "⏳ *Arizangiz ko'rib chiqilmoqda...*\n\n"
         
         response += f"👤 *Ism:* {app_data['full_name']}\n"
-        # response += f"📋 *Holat:* {status}\n"
-        
-        # keyboard = [[InlineKeyboardButton("♻️ Boshidan", callback_data="restart_flow")]]
-        # reply_markup = InlineKeyboardMarkup(keyboard)
         
         await update.effective_message.reply_text(
             response,

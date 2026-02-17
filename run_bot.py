@@ -1,0 +1,363 @@
+#!/usr/bin/env python
+"""
+Standalone Telegram bot runner - avoids Django admin module loading
+Run with: python run_bot.py
+"""
+import os
+import re
+import logging
+import sys
+import asyncio
+
+# Setup minimal Django
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
+
+import django
+django.setup()
+
+from asgiref.sync import sync_to_async
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.ext import (
+    ApplicationBuilder,
+    ContextTypes,
+    CommandHandler,
+    MessageHandler,
+    CallbackQueryHandler,
+    ConversationHandler,
+    filters,
+)
+from hackathon.models import Application, BotUser
+
+# Enable logging
+logging.basicConfig(
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
+)
+logger = logging.getLogger(__name__)
+
+# States
+PHONE_INPUT = 0
+INTRIGUE_CHECK = 1
+CHANNEL_GATE = 2
+RESULT_DISPLAY = 3
+
+# Required Channels
+REQUIRED_CHANNELS = [
+    "@robocode_andijan",
+    "@andijan_it_community",
+    "@tuaf_edu",
+    "@aiHackaton"
+]
+
+@sync_to_async
+def find_application(phone, user_id=None):
+    clean_input = re.sub(r'\D', '', phone)
+    if not clean_input:
+        return None
+        
+    target_last_9 = clean_input[-9:]
+    
+    bot_user, _ = BotUser.objects.get_or_create(telegram_id=user_id)
+    if bot_user.claimed_phone:
+        db_phone_clean = re.sub(r'\D', '', bot_user.claimed_phone)
+        if db_phone_clean.endswith(target_last_9):
+            app = Application.objects.filter(phone__endswith=target_last_9).first()
+            if app:
+                return {
+                    'id': app.id,
+                    'full_name': app.full_name,
+                    'status': app.status,
+                    'umumiy_holat': app.overall_status,
+                    'already_claimed': True
+                }
+        else:
+            return {'error': 'limit_reached'}
+
+    candidates = Application.objects.all()
+    
+    for app in candidates:
+        if not app.phone:
+            continue
+        db_phone_clean = re.sub(r'\D', '', app.phone)
+        if db_phone_clean.endswith(target_last_9):
+            return {
+                'id': app.id,
+                'full_name': app.full_name,
+                'status': app.status,
+                'umumiy_holat': app.overall_status,
+            }
+            
+    return None
+
+@sync_to_async
+def claim_application(phone, user_id, username=None):
+    clean_phone = re.sub(r'\D', '', phone)
+    bot_user, _ = BotUser.objects.get_or_create(telegram_id=user_id)
+    if not bot_user.claimed_phone:
+        bot_user.claimed_phone = clean_phone
+        if username and not bot_user.username:
+            bot_user.username = username
+        bot_user.save()
+
+
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    info_text = (
+        "🤖 <b>Assalomu alaykum!</b>\n\n"
+        "Ushbu bot orqali siz hakatonda qatnashish uchun topshirgan "
+        "arizangiz holatini tekshirishingiz mumkin.\n\n"
+        "📋 <b>Eslatma:</b>\n"
+        "• Natijalar maxfiy va faqat shaxsiy tekshirish uchun.\n"
+        "• Bitta qatnashuvchi faqat o'zini natijasini ko'rishi mumkin.\n"
+        "• Agar ma'lumot topilmasa, qayta urinib ko'rishingiz mumkin."
+    )
+    
+    keyboard = [[InlineKeyboardButton("🚀 Tekshirish", callback_data="start_check")]]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    
+    await update.message.reply_text(info_text, parse_mode='HTML', reply_markup=reply_markup)
+    return PHONE_INPUT
+
+
+async def ask_phone_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+    await query.edit_message_text(
+        "Telefon raqamingizni kiriting:\n"
+        "(Masalan: 991234567 yoki +998991234567)"
+    )
+    return PHONE_INPUT
+
+
+async def verify_channels(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = update.effective_user.id
+    missing_channels = []
+    
+    for channel in REQUIRED_CHANNELS:
+        try:
+            member = await context.bot.get_chat_member(chat_id=channel, user_id=user_id)
+            if member.status in ['left', 'kicked', 'restricted']:
+                missing_channels.append(channel)
+        except Exception as e:
+            logger.warning(f"Failed channel check {channel}: {e}")
+            missing_channels.append(channel)
+
+    if missing_channels:
+        keyboard = []
+        for channel in missing_channels:
+            url = f"https://t.me/{channel.replace('@', '')}"
+            keyboard.append([InlineKeyboardButton(f"Obuna bo'lish {channel}", url=url)])
+        
+        keyboard.append([InlineKeyboardButton("Tekshirish", callback_data="check_subs")])
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        
+        msg = "Natijani ko'rish uchun quyidagi kanallarga obuna bo'ling \n (Endi xizmatchilikda nima deysiz 😉)"
+        
+        if update.callback_query:
+            try:
+                await update.callback_query.edit_message_text(msg, reply_markup=reply_markup)
+            except Exception as e:
+                 if "not modified" in str(e):
+                    await update.callback_query.answer("O'zi atiga to'rt dona kanal sizga og'irlik qilmasa kerak Djigar 😆", show_alert=True)
+        else:
+             await update.message.reply_text(msg, reply_markup=reply_markup)
+        
+        return CHANNEL_GATE
+    else:
+        return await show_result(update, context)
+
+
+async def process_phone(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    text = update.message.text
+    phone = re.sub(r'\D', '', text)
+    
+    if len(phone) < 9:
+        await update.message.reply_text("Telefon raqam noto'g'ri. Qaytadan kiriting (kamida 9 ta raqam):")
+        return PHONE_INPUT
+    
+    context.user_data['phone'] = phone
+    
+    app_data = await find_application(phone, user_id=update.effective_user.id)
+    
+    if isinstance(app_data, dict) and app_data.get('error') == 'limit_reached':
+         await update.message.reply_text(
+            "❌ <b>Siz allaqachon birinchi arizangizni tekshirgansiz.</b>\n\n"
+            "Bitta Telegram akkauntdan faqat bitta arizani ko'rish mumkin.",
+            parse_mode='HTML'
+        )
+         return PHONE_INPUT
+
+    if not app_data:
+        keyboard = [[InlineKeyboardButton("Qayta tekshirish", callback_data="retry_check")]]
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        await update.message.reply_text(
+            "Bu ma'lumotlar bo'yicha ro'yxatdan o'tish topilmadi",
+            reply_markup=reply_markup
+        )
+        return INTRIGUE_CHECK
+    
+    context.user_data['app_data'] = app_data
+    
+    full_name = app_data['full_name']
+    
+    msg = (
+        f"Biz <b>{full_name}</b> uchun natijani topdik 🎉 \n"
+        "👀 Natijani ko'rishga tayyormisiz? "
+    )
+    
+    keyboard = [[InlineKeyboardButton("Ha, natijani ko'rish 🎉", callback_data="see_result")]]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    
+    await update.message.reply_text(msg, parse_mode='HTML', reply_markup=reply_markup)
+    return INTRIGUE_CHECK
+
+
+async def retry_check(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+    
+    await query.edit_message_text(
+        "Telefon raqamingizni kiriting:\n"
+        "(Masalan: 991234567 yoki +998991234567)"
+    )
+    return PHONE_INPUT
+
+
+async def handle_error(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    logger.error(f"Update {update} caused error {context.error}")
+    if "Conflict" in str(context.error):
+        logger.error("Multiple bot instances detected. Please stop other instances.")
+    elif "Timed out" in str(context.error):
+        logger.warning("Network timeout. Retrying...")
+
+
+async def proceed_to_channel_gate(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+    return await verify_channels_for_result(update, context)
+
+
+async def verify_channels_for_result(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = update.effective_user.id
+    missing_channels = []
+    
+    for channel in REQUIRED_CHANNELS:
+        try:
+            member = await context.bot.get_chat_member(chat_id=channel, user_id=user_id)
+            if member.status in ['left', 'kicked', 'restricted']:
+                missing_channels.append(channel)
+        except Exception as e:
+            logger.warning(f"Failed channel check {channel}: {e}")
+            missing_channels.append(channel)
+
+    if missing_channels:
+        keyboard = []
+        for channel in missing_channels:
+            url = f"https://t.me/{channel.replace('@', '')}"
+            keyboard.append([InlineKeyboardButton(f"Obuna bo'lish {channel}", url=url)])
+        
+        keyboard.append([InlineKeyboardButton("Tekshirish", callback_data="check_subs")])
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        
+        msg = "Natijani ko'rish uchun quyidagi kanallarga obuna bo'ling \n (Endi xizmatchilikda nima deysiz 😉)"
+        
+        try:
+            await update.callback_query.edit_message_text(msg, reply_markup=reply_markup)
+        except Exception as e:
+             if "not modified" in str(e):
+                await update.callback_query.answer("O'zi to'rt donagina kanal, sizga og'irlik qilmasa kerak Djigar 😆", show_alert=True)
+        
+        return CHANNEL_GATE
+    else:
+        return await show_result(update, context)
+
+
+async def show_result(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    app_data = context.user_data.get('app_data')
+    if not app_data:
+        return await start(update, context)
+        
+    username = update.effective_user.username or update.effective_user.first_name or None
+    await claim_application(context.user_data.get('phone'), update.effective_user.id, username)
+
+    # Determine approval status - check both fields
+    umumiy_holat = app_data.get('umumiy_holat')
+    status = app_data.get('status')
+    
+    # Priority: overall_status if set, otherwise use status field
+    if umumiy_holat == Application.OVERALL_STATUS_QABUL_QILINDI or status == 'accepted':
+        final_status = Application.OVERALL_STATUS_QABUL_QILINDI
+    elif umumiy_holat == Application.OVERALL_STATUS_QABUL_QILINMADI or status == 'rejected':
+        final_status = Application.OVERALL_STATUS_QABUL_QILINMADI
+    else:
+        final_status = Application.OVERALL_STATUS_KUTILAYAPTI
+
+    response = ""
+    if final_status == Application.OVERALL_STATUS_QABUL_QILINDI:
+        response = "✅ <b>Tabriklaymiz!</b>\nSiz birinchi bosqichdagi darslarimizga qabul qilindingiz\n Guruhimizni kuzatib boring o'sha yerda sizni maktabingizda darslar qachon bo'lishi e'lon qilinadi\n @andijon_hackathon \n\n"
+    elif final_status == Application.OVERALL_STATUS_QABUL_QILINMADI:
+        response = "❌ <b>Afsuski,</b> arizangiz RAD ETILDI.\n\n"
+    else:
+        response = "⏳ <b>Arizangiz ko'rib chiqilmoqda...</b>\n\n"
+    
+    response += f"👤 <b>Ism:</b> {app_data['full_name']}\n"
+    
+    await update.effective_message.reply_text(
+        response,
+        parse_mode='HTML'
+    )
+    return RESULT_DISPLAY
+
+
+async def restart_flow(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+    
+    context.user_data.pop('phone', None)
+    context.user_data.pop('app_data', None)
+    
+    await query.edit_message_text(
+        "Telefon raqamingizni kiriting:\n"
+        "(Masalan: 991234567 yoki +998991234567)"
+    )
+    return PHONE_INPUT
+
+
+def main():
+    """Main entry point for the bot"""
+    token = os.getenv("TELEGRAM_BOT_TOKEN")
+    if not token:
+        print("ERROR: TELEGRAM_BOT_TOKEN not found in environment")
+        sys.exit(1)
+
+    app = ApplicationBuilder().token(token).build()
+
+    conv_handler = ConversationHandler(
+        entry_points=[CommandHandler("start", start)],
+        states={
+            PHONE_INPUT: [
+                CallbackQueryHandler(ask_phone_handler, pattern="^start_check$"),
+                MessageHandler(filters.TEXT & ~filters.COMMAND, process_phone)
+            ],
+            INTRIGUE_CHECK: [
+                CallbackQueryHandler(proceed_to_channel_gate, pattern="^see_result$"),
+                CallbackQueryHandler(retry_check, pattern="^retry_check$")
+            ],
+            CHANNEL_GATE: [
+                CallbackQueryHandler(verify_channels, pattern="^check_subs$")
+            ],
+            RESULT_DISPLAY: [
+                CallbackQueryHandler(restart_flow, pattern="^restart_flow$")
+            ]
+        },
+        fallbacks=[CommandHandler("start", start)],
+        per_message=False
+    )
+
+    app.add_handler(conv_handler)
+    app.add_error_handler(handle_error)
+    
+    print("🤖 Bot started polling...")
+    app.run_polling()
+
+
+if __name__ == '__main__':
+    main()
