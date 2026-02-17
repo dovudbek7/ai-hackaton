@@ -306,7 +306,18 @@ class Command(BaseCommand):
         username = update.effective_user.username or update.effective_user.first_name or None
         await claim_application(context.user_data.get('phone'), update.effective_user.id, username)
 
-        umumiy_holat = app_data.get('umumiy_holat') or Application.OVERALL_STATUS_KUTILAYAPTI
+        # Check overall_status (preferred), but also check status field for compatibility
+        umumiy_holat = app_data.get('umumiy_holat')
+        status = app_data.get('status')
+        
+        # Map status field to overall_status equivalents
+        if not umumiy_holat:
+            if status == 'accepted':
+                umumiy_holat = Application.OVERALL_STATUS_QABUL_QILINDI
+            elif status == 'rejected':
+                umumiy_holat = Application.OVERALL_STATUS_QABUL_QILINMADI
+            else:
+                umumiy_holat = Application.OVERALL_STATUS_KUTILAYAPTI
 
         response = ""
         if umumiy_holat == Application.OVERALL_STATUS_QABUL_QILINDI:
