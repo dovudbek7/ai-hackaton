@@ -14,7 +14,7 @@ from telegram.ext import (
     ConversationHandler,
     filters,
 )
-from hackathon.models import Application, BotUser, StudentTest
+from hackathon.models import Application, BotUser
 
 # Enable logging
 logging.basicConfig(
@@ -52,13 +52,11 @@ def find_application(phone, user_id=None):
         if db_phone_clean.endswith(target_last_9):
             app = Application.objects.filter(phone__endswith=target_last_9).first()
             if app:
-                test = app.student_tests.first()
                 return {
                     'id': app.id,
                     'full_name': app.full_name,
                     'status': app.status,
                     'umumiy_holat': app.overall_status,
-                    'test_ai_holat': test.ai_holat if test else StudentTest.AI_HOLAT_KUTILAYAPTI,
                     'already_claimed': True
                 }
         else:
@@ -71,13 +69,11 @@ def find_application(phone, user_id=None):
             continue
         db_phone_clean = re.sub(r'\D', '', app.phone)
         if db_phone_clean.endswith(target_last_9):
-            test = app.student_tests.first()
             return {
                 'id': app.id,
                 'full_name': app.full_name,
                 'status': app.status,
                 'umumiy_holat': app.overall_status,
-                'test_ai_holat': test.ai_holat if test else StudentTest.AI_HOLAT_KUTILAYAPTI,
             }
             
     return None
@@ -309,20 +305,15 @@ class Command(BaseCommand):
             
         username = update.effective_user.username or update.effective_user.first_name or None
         await claim_application(context.user_data.get('phone'), update.effective_user.id, username)
-            
+
         umumiy_holat = app_data.get('umumiy_holat') or Application.OVERALL_STATUS_KUTILAYAPTI
-        test_ai_holat = app_data.get('test_ai_holat') or StudentTest.AI_HOLAT_KUTILAYAPTI
-        
+
         response = ""
         if umumiy_holat == Application.OVERALL_STATUS_QABUL_QILINDI:
             response = "✅ *Tabriklaymiz!*\nSiz birinchi bosqichdagi darslarimizga qabul qilindingiz\n Guruhimizni kuzatib boring o'sha yerda sizni maktabingizda darslar qachon bo'lishi e'lon qilinadi\n @andijon_hackathon \n\n"
             response += "📝 *Test javoblari:*\n"
-            if test_ai_holat == StudentTest.AI_HOLAT_QABUL_QILINDI:
-                response += "• O‘tdingiz\n\n"
-            elif test_ai_holat == StudentTest.AI_HOLAT_QABUL_QILINMADI:
-                response += "• O‘tmadingiz\n\n"
-            else:
-                response += "• Natija kutilmoqda\n\n"
+            # Test results are intentionally not retrieved here; always show neutral message
+            response += "• Natija kutilmoqda\n\n"
         elif umumiy_holat == Application.OVERALL_STATUS_QABUL_QILINMADI:
             response = "❌ *Afsuski,* arizangiz RAD ETILDI.\n\n"
         else:
