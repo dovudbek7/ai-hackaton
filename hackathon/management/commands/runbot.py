@@ -315,7 +315,7 @@ class Command(BaseCommand):
         
         response = ""
         if umumiy_holat == Application.OVERALL_STATUS_QABUL_QILINDI:
-            response = "✅ *Tabriklaymiz!*\nArizangiz QABUL QILINDI!\n\n"
+            response = "✅ *Tabriklaymiz!*\nSiz birinchi bosqichdagi darslarimizga qabul qilindingiz\n Guruhimizni kuzatib boring o'sha yerda sizni maktabingizda darslar qachon bo'lishi e'lon qilinadi\n @andijon_hackathon \n\n"
             response += "📝 *Test javoblari:*\n"
             if test_ai_holat == StudentTest.AI_HOLAT_QABUL_QILINDI:
                 response += "• O‘tdingiz\n\n"
