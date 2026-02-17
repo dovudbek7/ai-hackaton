@@ -311,9 +311,6 @@ class Command(BaseCommand):
         response = ""
         if umumiy_holat == Application.OVERALL_STATUS_QABUL_QILINDI:
             response = "✅ *Tabriklaymiz!*\nSiz birinchi bosqichdagi darslarimizga qabul qilindingiz\n Guruhimizni kuzatib boring o'sha yerda sizni maktabingizda darslar qachon bo'lishi e'lon qilinadi\n @andijon_hackathon \n\n"
-            response += "📝 *Test javoblari:*\n"
-            # Test results are intentionally not retrieved here; always show neutral message
-            response += "• Natija kutilmoqda\n\n"
         elif umumiy_holat == Application.OVERALL_STATUS_QABUL_QILINMADI:
             response = "❌ *Afsuski,* arizangiz RAD ETILDI.\n\n"
         else:
